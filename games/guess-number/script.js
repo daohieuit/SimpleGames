@@ -12,6 +12,7 @@ const state = {
     isHost: false,
     roomId: '',
     currentPhase: 'home',
+    isConnected: false,
     minRange: 0,
     maxRange: 100,
     timeLimit: 15,
@@ -37,6 +38,9 @@ const phases = {
     gameOver: document.getElementById('game-over-phase')
 };
 
+const lobbyStatus = document.getElementById('lobby-status');
+const roomInfo = document.getElementById('room-info');
+const wordSubmission = document.getElementById('word-submission');
 const nameInput = document.getElementById('name-input');
 const minRangeInput = document.getElementById('min-range-input');
 const maxRangeInput = document.getElementById('max-range-input');
@@ -80,6 +84,7 @@ const translations = {
         create: "Create Room",
         join: "Join Room",
         waitingOpp: "Waiting for Opponent...",
+        oppConnected: "Opponent Connected!",
         roomIdLabel: "Room ID:",
         submitTitle: "Set Your Number",
         rangeHint: (min, max) => `Choose a number between ${min} and ${max}.`,
@@ -112,6 +117,7 @@ const translations = {
         create: "Tạo Phòng",
         join: "Vào Phòng",
         waitingOpp: "Đang đợi đối thủ...",
+        oppConnected: "Đối thủ đã kết nối!",
         roomIdLabel: "Mã phòng:",
         submitTitle: "Nhập số của bạn",
         rangeHint: (min, max) => `Chọn một số từ ${min} đến ${max}.`,
@@ -154,7 +160,14 @@ function updateLanguageUI() {
     document.getElementById('label-custom-room').textContent = t.roomLabel;
     createRoomBtn.textContent = t.create;
     joinRoomBtn.textContent = t.join;
-    document.getElementById('lobby-status').textContent = t.waitingOpp;
+    
+    // Lobby Status
+    if (state.isConnected) {
+        lobbyStatus.textContent = t.oppConnected;
+    } else {
+        lobbyStatus.textContent = t.waitingOpp;
+    }
+    
     document.getElementById('room-id-label').firstChild.textContent = t.roomIdLabel + " ";
     document.getElementById('submit-words-title').textContent = t.submitTitle;
     document.getElementById('range-hint').textContent = t.rangeHint(state.minRange, state.maxRange);
@@ -192,20 +205,60 @@ function triggerFlash() {
     setTimeout(() => flash.classList.remove('active'), 800);
 }
 
-// Peer Logic
-function initPeer() {
-    const peerId = state.isHost ? ('guessnumber-v1-' + state.roomId || undefined) : undefined;
-    state.peer = new Peer(peerId, { debug: 2 });
+// Fetch TURN server credentials dynamically
+let cachedIceServers = null;
+async function getIceServers() {
+    if (cachedIceServers) return cachedIceServers;
+    try {
+        const response = await fetch("https://daohieuit.metered.live/api/v1/turn/credentials?apiKey=8ebe79943f37e5a240441eb50a579fb8877a");
+        cachedIceServers = await response.json();
+        return cachedIceServers;
+    } catch (e) {
+        console.error("Failed to fetch TURN credentials, using defaults:", e);
+        return [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' }
+        ];
+    }
+}
 
+// Peer Logic
+async function initPeer() {
+    const iceServers = await getIceServers();
+    const peerId = state.isHost ? ('guessnumber-v1-' + state.roomId || undefined) : undefined;
+    
+    const peerOptions = {
+        debug: 2,
+        host: '0.peerjs.com',
+        port: 443,
+        secure: true,
+        config: {
+            'iceServers': iceServers,
+            sdpSemantics: 'unified-plan'
+        }
+    };
+
+    state.peer = new Peer(peerId, peerOptions);
+
+    // Signaling Heartbeat
+    let heartbeat;
     state.peer.on('open', (id) => {
-        // Store the actual room code (stripping our prefix if host)
         const roomCode = state.isHost ? state.roomId : id;
         state.roomId = roomCode;
         displayRoomCode.textContent = roomCode;
         
+        heartbeat = setInterval(() => {
+            if (state.peer && !state.peer.destroyed) {
+                state.peer.socket.send({ type: 'HEARTBEAT' });
+            }
+        }, 5000);
+
         if (state.isHost) {
             showPhase('lobby');
-            document.getElementById('room-info').style.display = 'flex';
+            roomInfo.style.display = 'flex';
         } else {
             connectToHost('guessnumber-v1-' + roomCodeInput.value.trim());
         }
@@ -213,12 +266,17 @@ function initPeer() {
 
     state.peer.on('connection', (conn) => {
         if (state.isHost) {
+            if (state.conn) {
+                conn.close();
+                return;
+            }
             state.conn = conn;
             setupConnection();
         }
     });
 
     state.peer.on('error', (err) => {
+        clearInterval(heartbeat);
         console.error(err);
         showToast("Room ID busy or Connection error!", true);
         showPhase('home');
@@ -226,13 +284,29 @@ function initPeer() {
 }
 
 function connectToHost(hostId) {
-    state.conn = state.peer.connect(hostId);
+    state.conn = state.peer.connect(hostId, { reliable: true });
     setupConnection();
     showPhase('lobby');
 }
 
 function setupConnection() {
+    // Handshake Timeout
+    const connTimeout = setTimeout(() => {
+        if (!state.conn.open) {
+            console.error("Connection Handshake Timeout");
+            alert(state.language === 'en' ? 
+                "Connection timed out. Try switching to 4G/LTE or check if both players have a stable signal." : 
+                "Kết nối quá hạn. Hãy thử chuyển sang 4G/LTE hoặc kiểm tra xem cả hai người chơi có tín hiệu ổn định không.");
+            location.reload();
+        }
+    }, 20000);
+
     state.conn.on('open', () => {
+        clearTimeout(connTimeout);
+        state.isConnected = true;
+        const t = translations[state.language];
+        lobbyStatus.textContent = t.oppConnected;
+        
         if (state.isHost) {
             state.conn.send({
                 type: 'init-game',
@@ -242,9 +316,8 @@ function setupConnection() {
             state.conn.send({ type: 'guest-name', name: state.myName });
         }
         
-        document.getElementById('room-info').style.display = 'none';
-        document.getElementById('word-submission').style.display = 'block';
-        document.getElementById('lobby-status').style.display = 'none';
+        roomInfo.style.display = 'none';
+        wordSubmission.style.display = 'block';
         document.getElementById('hint-min').textContent = state.minRange;
         document.getElementById('hint-max').textContent = state.maxRange;
     });
@@ -262,6 +335,14 @@ function setupConnection() {
                 break;
             case 'guest-name':
                 state.opponentName = data.name;
+                updateLanguageUI();
+                // Send host info back if I am host
+                if (state.isHost) {
+                    state.conn.send({
+                        type: 'init-game',
+                        config: { min: state.minRange, max: state.maxRange, time: state.timeLimit, hostName: state.myName }
+                    });
+                }
                 break;
             case 'ready':
                 state.opponentSecret = data.secret;
@@ -280,6 +361,12 @@ function setupConnection() {
                 endGame(data.winner === state.peer.id, data.secret);
                 break;
         }
+    });
+
+    state.conn.on('close', () => {
+        state.isConnected = false;
+        alert(state.language === 'en' ? "Opponent disconnected" : "Đối thủ đã ngắt kết nối");
+        location.reload();
     });
 }
 
