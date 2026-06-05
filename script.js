@@ -21,10 +21,14 @@ themeToggle.onclick = () => {
 const langToggle = document.getElementById('lang-toggle');
 const translations = {
     en: {
-        title: "Simple Games"
+        title: "Simple Games",
+        errorRoomCode: "Please enter a room code!",
+        errorGameMode: "Please select a game mode!"
     },
     vi: {
-        title: "Trò Chơi Đơn Giản"
+        title: "Trò Chơi Đơn Giản",
+        errorRoomCode: "Vui lòng nhập mã phòng!",
+        errorGameMode: "Vui lòng chọn chế độ chơi!"
     }
 };
 
@@ -35,6 +39,11 @@ function updateLanguageUI() {
     // Update all elements with data-en/data-vi
     document.querySelectorAll('[data-en]').forEach(el => {
         el.textContent = el.getAttribute(`data-${state.language}`);
+    });
+
+    // Update all placeholders with data-placeholder-en/data-placeholder-vi
+    document.querySelectorAll('[data-placeholder-en]').forEach(el => {
+        el.setAttribute('placeholder', el.getAttribute(`data-placeholder-${state.language}`));
     });
 
     langToggle.textContent = state.language === 'en' ? 'VI' : 'US';
@@ -54,3 +63,35 @@ updateLanguageUI();
 document.getElementById('web-logo').onclick = () => {
     window.location.href = 'index.html';
 };
+
+// Quick Join Logic
+const quickJoinForm = document.getElementById('quick-join-form');
+if (quickJoinForm) {
+    quickJoinForm.onsubmit = (e) => {
+        e.preventDefault();
+        const roomCode = document.getElementById('quick-room-code').value.trim();
+        const gameMode = document.getElementById('quick-game-mode').value;
+        const t = translations[state.language];
+
+        if (!roomCode) {
+            showToast(t.errorRoomCode, true);
+            return;
+        }
+        if (!gameMode) {
+            showToast(t.errorGameMode, true);
+            return;
+        }
+
+        window.location.href = `games/${gameMode}/index.html?room=${encodeURIComponent(roomCode)}`;
+    };
+}
+
+// Toast Function
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.toggle('error', isError);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}

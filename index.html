@@ -34,6 +34,26 @@
     </header>
 
     <main class="game-selection">
+      <!-- Quick Join Section -->
+      <div class="quick-join-card">
+        <h2 id="quick-join-title" data-en="Quick Join" data-vi="Vào Phòng Nhanh">Quick Join</h2>
+        <form id="quick-join-form" class="quick-join-form" novalidate>
+          <div class="input-group">
+            <label for="quick-room-code" class="sr-only" data-en="Room Code" data-vi="Mã Phòng">Room Code</label>
+            <input type="text" id="quick-room-code" placeholder="Enter room code..." data-placeholder-en="Enter room code..." data-placeholder-vi="Nhập mã phòng..." required>
+          </div>
+          <div class="input-group">
+            <label for="quick-game-mode" class="sr-only" data-en="Select Game" data-vi="Chọn Game">Select Game</label>
+            <select id="quick-game-mode" required>
+              <option value="" disabled selected data-en="Select game..." data-vi="Chọn game...">Select game...</option>
+              <option value="guess-number" data-en="Guess Number" data-vi="Đoán Số">Guess Number</option>
+              <option value="guess-word" data-en="Guess Word" data-vi="Đoán Từ">Guess Word</option>
+            </select>
+          </div>
+          <button type="submit" class="btn primary" id="quick-join-btn" data-en="Join Room" data-vi="Vào Phòng">Join Room</button>
+        </form>
+      </div>
+
       <div class="game-grid">
         <!-- Game 1: Guess Word -->
         <a href="games/guess-word/index.html" class="game-card">
