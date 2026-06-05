@@ -407,6 +407,7 @@ function startCountDown() {
     showPhase('battle');
     let count = 3;
     timerDisplay.textContent = "00.000";
+    timerDisplay.classList.add('visible');
     
     const countInterval = setInterval(() => {
         if (count > 0) {
@@ -550,6 +551,7 @@ function resetGame() {
     
     if (state.timerInterval) clearInterval(state.timerInterval);
     timerDisplay.classList.remove('running');
+    timerDisplay.classList.remove('visible');
     timerDisplay.textContent = "00.000";
     
     guessInput.value = '';
