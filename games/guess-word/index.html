@@ -3,8 +3,12 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Guess Word - Đoán Từ</title>
+  <meta name="description" content="Đoán Từ - Trận chiến chuỗi nối từ tactical P2P. Thử thách đoán từ nối đuôi và đánh bại đối thủ của bạn thời gian thực.">
+  <meta property="og:title" content="Đoán Từ - Guess Word">
+  <meta property="og:description" content="Đoán Từ - Trận chiến chuỗi nối từ tactical P2P. Thử thách đoán từ nối đuôi và đánh bại đối thủ của bạn thời gian thực.">
+  <meta property="og:type" content="website">
   <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon_io/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon_io/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../../assets/favicon_io/favicon-16x16.png">
@@ -36,7 +40,7 @@
       <!-- Home Phase -->
     <section id="home-phase" class="phase active">
       <div class="card">
-        <h2>Chào mừng đến với Đoán Từ</h2>
+        <h2 id="welcome-text">Chào mừng đến với Đoán Từ</h2>
         <div class="name-config">
           <label for="name-input" id="label-name">Tên của bạn:</label>
           <input type="text" id="name-input" placeholder="Nhập tên của bạn" maxlength="15">
@@ -57,6 +61,7 @@
           <button id="create-room-btn" class="btn primary">Tạo Phòng</button>
           <div class="divider">HOẶC</div>
           <div class="join-input">
+            <label for="room-code-input" class="sr-only">Mã phòng để vào</label>
             <input type="text" id="room-code-input" placeholder="Nhập mã phòng" maxlength="20">
             <button id="join-room-btn" class="btn secondary">Vào Phòng</button>
           </div>
@@ -69,12 +74,12 @@
       <div class="card">
         <h2 id="lobby-status">Đang đợi đối thủ...</h2>
         <div id="room-info" class="room-info" style="display: none;">
-          <p>Mã phòng: <strong id="display-room-code">---</strong></p>
+          <p id="room-id-label">Mã phòng: <strong id="display-room-code">---</strong></p>
           <button id="copy-link-btn" class="btn secondary small">Copy Link</button>
         </div>
 
         <div id="word-submission" style="display: none;">
-          <h3>Gửi chuỗi từ của bạn</h3>
+          <h3 id="submit-words-title">Gửi chuỗi từ của bạn</h3>
           <p class="hint">Mỗi cụm từ có tối đa 2 từ. Quy tắc nối đuôi: Từ cuối của cụm trước bằng từ đầu của cụm sau.</p>
           <div id="word-inputs">
               <!-- Word inputs will be added here -->
@@ -99,10 +104,6 @@
             <div id="opponent-words-display" class="words-container">
             <!-- Hidden words will be shown here -->
             </div>
-            <div id="guess-input-container" class="guess-input-container" style="display: none;">
-              <input type="text" id="guess-input" placeholder="Đoán một từ...">
-              <button id="guess-btn" class="btn secondary">Đoán</button>
-            </div>
           </div>
 
           <div class="player-area my-area">
@@ -111,6 +112,12 @@
               <!-- Your words will be shown here -->
             </div>
           </div>
+        </div>
+
+        <div id="guess-input-container" class="guess-input-container" style="display: none;">
+          <label for="guess-input" class="sr-only">Đoán một từ</label>
+          <input type="text" id="guess-input" placeholder="Đoán một từ...">
+          <button id="guess-btn" class="btn primary">Đoán</button>
         </div>
       </section>
 

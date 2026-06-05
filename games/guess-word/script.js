@@ -11,7 +11,7 @@ const state = {
     opponentReady: false,
     meReady: false,
     isConnected: false,
-    language: 'vi',
+    language: localStorage.getItem('language') || 'en',
     myRevealedIndices: [],
     chainLength: 5,
     timeLimit: 45,
@@ -165,6 +165,7 @@ const translations = {
 
 function updateLanguageUI() {
     const t = translations[state.language];
+    document.documentElement.lang = state.language;
     document.querySelector('h1').textContent = t.title;
 
     // Home Phase
@@ -525,7 +526,7 @@ function renderWordInputs() {
         row.className = 'word-row';
         row.innerHTML = `
             <span>${i + 1}.</span>
-            <input type="text" class="chain-word" placeholder="Word ${i + 1}" data-index="${i}">
+            <input type="text" class="chain-word" placeholder="Word ${i + 1}" data-index="${i}" aria-label="Từ thứ ${i + 1}">
         `;
         wordInputsContainer.appendChild(row);
     }
@@ -814,7 +815,7 @@ function triggerFlash() {
 }
 
 // Init
-state.language = localStorage.getItem('language') || 'vi';
+state.language = localStorage.getItem('language') || 'en';
 updateThemeUI();
 updateLanguageUI();
 if (state.myName) nameInput.value = state.myName;

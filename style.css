@@ -212,7 +212,7 @@ h1 {
     color: var(--heading-color);
 }
 
-.dark-mode h3 {
+.dark-mode .game-info h3 {
     background-color: var(--text-on-dark);
     color: var(--bg-color);
     padding: 0.25rem 0.75rem;
@@ -278,3 +278,17 @@ footer h5 {
         text-align: center;
     }
 }
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* placeholder label aria-label */

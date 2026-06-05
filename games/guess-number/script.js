@@ -22,7 +22,7 @@ const state = {
     timerInterval: null,
     isMyTurn: false,
     gameActive: false,
-    language: localStorage.getItem('language') || 'vi',
+    language: localStorage.getItem('language') || 'en',
     theme: localStorage.getItem('theme') || 'light'
 };
 
@@ -75,6 +75,7 @@ window.addEventListener('load', () => {
 // Translations
 const translations = {
     en: {
+        title: "Guess Number",
         welcome: "Welcome to Guess Number",
         nameLabel: "Your Name:",
         minLabel: "Min:",
@@ -108,6 +109,7 @@ const translations = {
         linkCopied: "Link copied!"
     },
     vi: {
+        title: "Đoán Số",
         welcome: "Chào mừng đến với Đoán Số",
         nameLabel: "Tên của bạn:",
         minLabel: "Min:",
@@ -152,6 +154,8 @@ function showPhase(phaseName) {
 
 function updateLanguageUI() {
     const t = translations[state.language];
+    document.documentElement.lang = state.language;
+    document.querySelector('h1').textContent = t.title;
     document.getElementById('welcome-text').textContent = t.welcome;
     document.getElementById('label-name').textContent = t.nameLabel;
     document.getElementById('label-min-range').textContent = t.minLabel;
@@ -171,12 +175,12 @@ function updateLanguageUI() {
     document.getElementById('room-id-label').firstChild.textContent = t.roomIdLabel + " ";
     document.getElementById('submit-words-title').textContent = t.submitTitle;
     document.getElementById('range-hint').textContent = t.rangeHint(state.minRange, state.maxRange);
-    submitWordsBtn.textContent = t.ready;
+    submitWordsBtn.textContent = submitWordsBtn.disabled ? "..." : (state.mySecret !== null ? t.waitingOpp : t.ready);
     playAgainBtn.textContent = t.playAgain;
     if (copyLinkBtn) copyLinkBtn.textContent = t.copyLink;
 
-    document.querySelector('.opponent-area h3').textContent = t.opponent;
-    document.querySelector('.my-area h3').textContent = t.you;
+    document.querySelector('.opponent-area h3').textContent = state.opponentName || t.opponent;
+    document.querySelector('.my-area h3').textContent = state.myName || t.you;
     if (state.mySecret !== null) {
         document.getElementById('my-secret-display').firstChild.textContent = t.secretLabel + " ";
     }
@@ -226,9 +230,8 @@ async function getIceServers() {
 }
 
 // Peer Logic
-async function initPeer() {
+async function initPeer(id = null) {
     const iceServers = await getIceServers();
-    const peerId = state.isHost ? ('guessnumber-v1-' + state.roomId || undefined) : undefined;
     
     const peerOptions = {
         debug: 2,
@@ -241,12 +244,12 @@ async function initPeer() {
         }
     };
 
-    state.peer = new Peer(peerId, peerOptions);
+    state.peer = new Peer(id, peerOptions);
 
     // Signaling Heartbeat
     let heartbeat;
-    state.peer.on('open', (id) => {
-        const roomCode = state.isHost ? state.roomId : id;
+    state.peer.on('open', (peerId) => {
+        const roomCode = state.isHost ? state.roomId : peerId;
         state.roomId = roomCode;
         displayRoomCode.textContent = roomCode;
         
@@ -275,11 +278,29 @@ async function initPeer() {
         }
     });
 
+    state.peer.on('disconnected', () => {
+        console.warn("Signaling disconnected. Attempting reconnect...");
+        state.peer.reconnect();
+    });
+
     state.peer.on('error', (err) => {
         clearInterval(heartbeat);
         console.error(err);
-        showToast("Room ID busy or Connection error!", true);
-        showPhase('home');
+        
+        const t = translations[state.language];
+        if (err.type === 'unavailable-id') {
+            alert(state.language === 'en' ? "Room code already in use or error. Try again." : "Mã phòng đã được sử dụng hoặc có lỗi. Thử lại.");
+            location.reload();
+        } else if (err.type === 'peer-unavailable') {
+            alert(state.language === 'en' ? "Room not found. Check the code!" : "Không tìm thấy phòng. Vui lòng kiểm tra lại mã!");
+            location.reload();
+        } else if (err.type === 'network') {
+            alert(state.language === 'en' ? "Network error. PeerJS server might be down or connection blocked." : "Lỗi mạng. Máy chủ PeerJS có thể đang gián đoạn hoặc kết nối bị chặn.");
+            location.reload();
+        } else {
+            alert((state.language === 'en' ? "PeerJS Error: " : "Lỗi PeerJS: ") + err.type);
+            location.reload();
+        }
     });
 }
 
@@ -359,6 +380,9 @@ function setupConnection() {
                 break;
             case 'game-over':
                 endGame(data.winner === state.peer.id, data.secret);
+                break;
+            case 'play-again':
+                resetGame();
                 break;
         }
     });
@@ -502,6 +526,27 @@ function endGame(isWin, secret) {
     secretRevealText.textContent = t.reveal(secret);
 }
 
+function resetGame() {
+    state.mySecret = null;
+    state.opponentSecret = null;
+    state.gameActive = false;
+    state.isMyTurn = false;
+    clearInterval(state.timerInterval);
+    timerDisplay.classList.remove('my-turn');
+    timerDisplay.classList.remove('visible');
+    
+    document.getElementById('opponent-history').innerHTML = '';
+    document.getElementById('my-history').innerHTML = '';
+    document.getElementById('displayed-my-secret').textContent = '--';
+    
+    submitWordsBtn.disabled = false;
+    submitWordsBtn.textContent = translations[state.language].ready;
+    secretNumberInput.value = '';
+    
+    wordSubmission.style.display = 'block';
+    showPhase('lobby');
+}
+
 // Event Listeners
 createRoomBtn.onclick = () => {
     state.myName = nameInput.value.trim() || "Host";
@@ -509,9 +554,10 @@ createRoomBtn.onclick = () => {
     state.minRange = parseInt(minRangeInput.value, 10);
     state.maxRange = parseInt(maxRangeInput.value, 10);
     state.timeLimit = parseInt(timeLimitInput.value, 10);
-    state.roomId = customRoomInput.value.trim();
+    const customCode = customRoomInput.value.trim();
+    state.roomId = customCode || Math.floor(100 + Math.random() * 900).toString();
     state.isHost = true;
-    initPeer();
+    initPeer('guessnumber-v1-' + state.roomId);
 };
 
 joinRoomBtn.onclick = () => {
@@ -528,14 +574,17 @@ submitWordsBtn.onclick = () => {
     if (num < state.minRange || num > state.maxRange) return showToast(translations[state.language].invalidRange, true);
     state.mySecret = num;
     submitWordsBtn.disabled = true;
-    submitWordsBtn.textContent = "...";
+    submitWordsBtn.textContent = translations[state.language].waitingOpp;
     state.conn.send({ type: 'ready', secret: num });
     checkStartBattle();
 };
 
 guessBtn.onclick = handleGuess;
 guessInput.onkeypress = (e) => { if (e.key === 'Enter') handleGuess(); };
-playAgainBtn.onclick = () => location.reload();
+playAgainBtn.onclick = () => {
+    state.conn.send({ type: 'play-again' });
+    resetGame();
+};
 themeToggle.onclick = () => {
     state.theme = (state.theme === 'light') ? 'dark' : 'light';
     localStorage.setItem('theme', state.theme);

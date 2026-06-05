@@ -5,6 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Đoán Số - Guess Number</title>
+  <meta name="description" content="Đoán Số - Trò chơi đoán số bí mật P2P kịch tính. Thử thách logic và trực giác của bạn cùng bạn bè qua kết nối trực tiếp PeerJS.">
+  <meta property="og:title" content="Đoán Số - Guess Number">
+  <meta property="og:description" content="Đoán Số - Trò chơi đoán số bí mật P2P kịch tính. Thử thách logic và trực giác của bạn cùng bạn bè qua kết nối trực tiếp PeerJS.">
+  <meta property="og:type" content="website">
+  <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon_io/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon_io/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../../assets/favicon_io/favicon-16x16.png">
   <link rel="manifest" href="../../assets/favicon_io/site.webmanifest">
@@ -20,7 +25,7 @@
   <div class="container">
     <header>
       <div class="header-top">
-        <img src="../../assets/images/hihi.png" id="web-logo" class="logo" alt="Guess Word Logo">
+        <img src="../../assets/images/hihi.png" id="web-logo" class="logo" alt="Guess Number Logo">
         <div class="header-actions">
           <div id="timer-display" class="timer">--</div>
           <div class="header-toggles">
@@ -60,6 +65,7 @@
           <button id="create-room-btn" class="btn primary">Tạo Phòng</button>
           <div class="divider">HOẶC</div>
           <div class="join-input">
+            <label for="room-code-input" class="sr-only">Mã phòng để vào</label>
             <input type="text" id="room-code-input" placeholder="Nhập mã phòng" maxlength="20">
             <button id="join-room-btn" class="btn secondary">Vào Phòng</button>
           </div>
@@ -81,6 +87,7 @@
           <p class="hint" id="range-hint">Chọn một số từ <span id="hint-min">0</span> đến <span id="hint-max">100</span>.</p>
           <div id="word-inputs">
             <div class="word-row">
+              <label for="secret-number-input" class="sr-only">Nhập số bí mật của bạn</label>
               <input type="number" id="secret-number-input" placeholder="Số bí mật">
             </div>
           </div>
@@ -116,6 +123,7 @@
 
       <div class="guess-input-container">
         <div class="word-row">
+          <label for="guess-input" class="sr-only">Đoán một số</label>
           <input type="number" id="guess-input" placeholder="Đoán một số...">
         </div>
         <button id="guess-btn" class="btn primary">Đoán</button>
@@ -133,7 +141,7 @@
 
     <footer>
       <div>
-        <h5>DAOHIEUIT</h5>
+        <h5>DaoHieuIT</h5>
       </div>
     </footer>
   </div>
