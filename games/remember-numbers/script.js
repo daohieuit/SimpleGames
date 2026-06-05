@@ -299,6 +299,12 @@ async function initPeer(id = null) {
         if (err.type === 'unavailable-id') {
             alert(t.roomCodeInUse);
             location.reload();
+        } else if (err.type === 'peer-unavailable') {
+            alert(state.language === 'en' ? "Room not found. Check the code!" : "Không tìm thấy phòng. Vui lòng kiểm tra lại mã!");
+            location.reload();
+        } else if (err.type === 'network') {
+            alert(state.language === 'en' ? "Network error. PeerJS server might be down or connection blocked." : "Lỗi mạng. Máy chủ PeerJS có thể đang gián đoạn hoặc kết nối bị chặn.");
+            location.reload();
         } else {
             alert(t.peerError);
             location.reload();
@@ -309,6 +315,7 @@ async function initPeer(id = null) {
 function connectToHost(hostId) {
     state.conn = state.peer.connect(hostId, { reliable: true });
     setupConnection();
+    showPhase('lobby');
 }
 
 function handleConnectionClose() {
