@@ -57,12 +57,41 @@ const timerDisplay = document.getElementById('timer-display');
 const toast = document.getElementById('toast');
 const copyLinkBtn = document.getElementById('copy-link-btn');
 
+function updateWelcomeText(roomCode) {
+    const welcomeText = document.getElementById('welcome-text');
+    if (state.language === 'en') {
+        welcomeText.textContent = `Join Room: ${roomCode}`;
+    } else {
+        welcomeText.textContent = `Vào Phòng: ${roomCode}`;
+    }
+}
+
 // Check for room code in URL on page load
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const roomParam = urlParams.get('room');
     if (roomParam) {
         document.getElementById('room-code-input').value = roomParam;
+        
+        // Hide config and show join mode only
+        document.querySelectorAll('.host-config').forEach(el => el.style.display = 'none');
+        const createBtn = document.getElementById('create-room-btn');
+        if (createBtn) createBtn.style.display = 'none';
+        const divider = document.querySelector('.divider');
+        if (divider) divider.style.display = 'none';
+        const roomInput = document.getElementById('room-code-input');
+        if (roomInput) roomInput.style.display = 'none';
+        const roomLabel = document.querySelector('.join-input label');
+        if (roomLabel) roomLabel.style.display = 'none';
+        
+        // Make the join button primary and look brutalist
+        const joinBtn = document.getElementById('join-room-btn');
+        if (joinBtn) {
+            joinBtn.classList.remove('secondary');
+            joinBtn.classList.add('primary');
+        }
+        
+        updateWelcomeText(roomParam);
     }
 });
 
@@ -169,7 +198,14 @@ function updateLanguageUI() {
     document.querySelector('h1').textContent = t.title;
 
     // Home Phase
-    document.querySelector('#home-phase h2').textContent = t.welcome;
+    // Check if roomParam exists to show dynamic welcome text, otherwise default
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+        updateWelcomeText(roomParam);
+    } else {
+        document.getElementById('welcome-text').textContent = t.welcome;
+    }
     document.getElementById('create-room-btn').textContent = t.createRoom;
     document.querySelector('.divider').textContent = t.or;
     document.getElementById('room-code-input').placeholder = t.enterCode;
