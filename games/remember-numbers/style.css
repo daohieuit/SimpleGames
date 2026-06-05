@@ -143,7 +143,7 @@ header {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--error-color);
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     background-color: var(--surface-soft);
     padding: 0.25rem 1.5rem;
     border-radius: 9999px;
@@ -173,7 +173,7 @@ header {
 }
 
 h1 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 700;
     line-height: 1.1;
@@ -196,7 +196,7 @@ h1 {
 }
 
 h2 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     margin-bottom: 2.5rem;
     font-weight: 700;
     color: var(--heading-color);
@@ -207,10 +207,9 @@ h2 {
 .name-config {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 320px;
-    margin: 0 auto 3rem;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 3rem;
 }
 
 .name-config label {
@@ -233,10 +232,13 @@ h2 {
 
 .host-config {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     width: 100%;
-    gap: 2rem;
+    max-width: 320px;
+    gap: 1.5rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .host-config label {
@@ -357,7 +359,7 @@ input:focus {
 }
 
 .player-area h3 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     text-align: center;
     margin-bottom: 2.5rem;
     font-size: 1rem;
@@ -393,7 +395,7 @@ input:focus {
     height: 4.5rem;
     border: 2px solid var(--border-color);
     border-radius: var(--rounded-md);
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 1.75rem;
     font-weight: 700;
     background-color: var(--card-bg);
@@ -425,7 +427,7 @@ input:focus {
 
 .word-row input {
     text-align: center;
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-weight: 700;
     font-size: 1.25rem;
     letter-spacing: 0.1em;
@@ -449,11 +451,19 @@ input:focus {
 /* Game Status / Indicators */
 .game-status {
     text-align: center;
-    margin-bottom: 2.5rem;
+    padding: 2rem;
+    background-color: var(--status-bg);
+    border-radius: var(--rounded-md);
+    color: var(--status-text);
+    font-family: "Alumni Sans SC", sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 4rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 #turn-indicator {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 1.5rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -576,7 +586,7 @@ footer {
 }
 
 footer h5 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-muted);

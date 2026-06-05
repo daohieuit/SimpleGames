@@ -129,7 +129,7 @@ header {
 }
 
 h1 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 700;
     line-height: 1.1;
@@ -205,7 +205,7 @@ h1 {
 }
 
 .game-info h3 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
@@ -260,7 +260,7 @@ footer {
 }
 
 footer h5 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-muted);

@@ -141,7 +141,7 @@ header {
 }
 
 h1 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: clamp(2rem, 8vw, 3.5rem);
     font-weight: 700;
     line-height: 1.1;
@@ -181,7 +181,7 @@ h1 {
 }
 
 h2 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     margin-bottom: 2.5rem;
     font-size: 1.75rem;
     font-weight: 700;
@@ -398,7 +398,7 @@ input:focus {
 }
 
 .player-area h3 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     text-align: center;
     margin-bottom: 2.5rem;
     font-size: 1rem;
@@ -442,7 +442,7 @@ input:focus {
 }
 
 .word-row span {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-weight: 700;
     color: var(--heading-color);
     font-size: 0.9rem;
@@ -464,7 +464,7 @@ input:focus {
     background-color: var(--bg-color);
     border-radius: var(--rounded-md);
     border: 1px solid var(--border-color);
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 1.35rem;
     font-weight: 700;
     letter-spacing: 0.15em;
@@ -476,7 +476,7 @@ input:focus {
 }
 
 .secret-display {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     padding: 1.25rem;
@@ -501,7 +501,7 @@ input:focus {
     background-color: var(--status-bg);
     border-radius: var(--rounded-md);
     color: var(--status-text);
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-weight: 700;
     font-size: 1.25rem;
     margin-bottom: 4rem;
@@ -595,7 +595,7 @@ footer {
 }
 
 footer h5 {
-    font-family: "Orbitron", sans-serif;
+    font-family: "Alumni Sans SC", sans-serif;
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-muted);

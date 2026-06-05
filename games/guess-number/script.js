@@ -5,7 +5,7 @@
  */
 
 const state = {
-    myName: localStorage.getItem('name') || '',
+    myName: '',
     opponentName: '',
     peer: null,
     conn: null,
@@ -23,7 +23,10 @@ const state = {
     isMyTurn: false,
     gameActive: false,
     language: localStorage.getItem('language') || 'en',
-    theme: localStorage.getItem('theme') || 'light'
+    theme: localStorage.getItem('theme') || 'light',
+    isReconnecting: false,
+    reconnectTimer: null,
+    reconnectInterval: null
 };
 
 // Audio Elements
@@ -234,12 +237,23 @@ function updateThemeUI() {
     themeToggle.textContent = isDark ? '☀️' : '🌙';
 }
 
-function showToast(message, isError = false) {
+let toastTimeout;
+function showToast(message, isError = false, persistent = false) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.classList.toggle('error', isError);
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    clearTimeout(toastTimeout);
+    if (!persistent) {
+        toastTimeout = setTimeout(() => {
+            hideToast();
+        }, 3000);
+    }
+}
+
+function hideToast() {
+    const toast = document.getElementById('toast');
+    if (toast) toast.classList.remove('show');
 }
 
 function triggerFlash() {
@@ -308,9 +322,12 @@ async function initPeer(id = null) {
 
     state.peer.on('connection', (conn) => {
         if (state.isHost) {
-            if (state.conn) {
+            if (state.conn && state.isConnected && !state.isReconnecting) {
                 conn.close();
                 return;
+            }
+            if (state.conn) {
+                try { state.conn.close(); } catch(e){}
             }
             state.conn = conn;
             setupConnection();
@@ -349,20 +366,73 @@ function connectToHost(hostId) {
     showPhase('lobby');
 }
 
-function setupConnection() {
-    // Handshake Timeout
-    const connTimeout = setTimeout(() => {
-        if (!state.conn.open) {
-            console.error("Connection Handshake Timeout");
-            alert(state.language === 'en' ? 
-                "Connection timed out. Try switching to 4G/LTE or check if both players have a stable signal." : 
-                "Kết nối quá hạn. Hãy thử chuyển sang 4G/LTE hoặc kiểm tra xem cả hai người chơi có tín hiệu ổn định không.");
+function handleConnectionClose() {
+    if (state.isReconnecting) return;
+    
+    if (state.currentPhase === 'home' || state.currentPhase === 'gameOver') {
+        location.reload();
+        return;
+    }
+    
+    state.isConnected = false;
+    state.isReconnecting = true;
+    
+    let timeLeft = 180;
+    const updateReconnectMsg = () => {
+        const msg = state.language === 'en' ? 
+            `Connection lost. Reconnecting... (${timeLeft}s)` : 
+            `Mất kết nối. Đang kết nối lại... (${timeLeft}s)`;
+        showToast(msg, true, true);
+    };
+    
+    updateReconnectMsg();
+    
+    if (state.timerInterval) clearInterval(state.timerInterval);
+    
+    state.reconnectTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(state.reconnectTimer);
+            if (state.reconnectInterval) clearInterval(state.reconnectInterval);
+            alert(state.language === 'en' ? "Reconnection failed!" : "Kết nối lại thất bại!");
             location.reload();
+        } else {
+            updateReconnectMsg();
         }
-    }, 20000);
+    }, 1000);
+    
+    if (!state.isHost) {
+        state.reconnectInterval = setInterval(() => {
+            console.log("Guest attempting auto-reconnect...");
+            if (state.peer && !state.peer.destroyed) {
+                if (state.conn) {
+                    try { state.conn.close(); } catch(e){}
+                }
+                state.conn = state.peer.connect('guessnumber-v1-' + state.roomId, { reliable: true });
+                setupConnection();
+            }
+        }, 3000);
+    }
+}
 
-    state.conn.on('open', () => {
-        clearTimeout(connTimeout);
+function setupConnection() {
+    let connTimeout;
+
+    const handleOpen = () => {
+        if (connTimeout) clearTimeout(connTimeout);
+        
+        if (state.isReconnecting) {
+            state.isReconnecting = false;
+            if (state.reconnectTimer) clearInterval(state.reconnectTimer);
+            if (state.reconnectInterval) clearInterval(state.reconnectInterval);
+            hideToast();
+            showToast(state.language === 'en' ? "Reconnected successfully!" : "Kết nối lại thành công!");
+            
+            if (state.currentPhase === 'battle') {
+                updateTurnUI();
+            }
+        }
+        
         state.isConnected = true;
         const t = translations[state.language];
         lobbyStatus.textContent = t.oppConnected;
@@ -380,7 +450,24 @@ function setupConnection() {
         wordSubmission.style.display = 'block';
         document.getElementById('hint-min').textContent = state.minRange;
         document.getElementById('hint-max').textContent = state.maxRange;
-    });
+    };
+
+    if (state.conn.open) {
+        handleOpen();
+    } else {
+        // Handshake Timeout
+        connTimeout = setTimeout(() => {
+            if (!state.conn.open) {
+                console.error("Connection Handshake Timeout");
+                alert(state.language === 'en' ? 
+                    "Connection timed out. Try switching to 4G/LTE or check if both players have a stable signal." : 
+                    "Kết nối quá hạn. Hãy thử chuyển sang 4G/LTE hoặc kiểm tra xem cả hai người chơi có tín hiệu ổn định không.");
+                location.reload();
+            }
+        }, 20000);
+
+        state.conn.on('open', handleOpen);
+    }
 
     state.conn.on('data', (data) => {
         switch (data.type) {
@@ -427,9 +514,7 @@ function setupConnection() {
     });
 
     state.conn.on('close', () => {
-        state.isConnected = false;
-        alert(state.language === 'en' ? "Opponent disconnected" : "Đối thủ đã ngắt kết nối");
-        location.reload();
+        handleConnectionClose();
     });
 }
 
@@ -589,7 +674,6 @@ function resetGame() {
 // Event Listeners
 createRoomBtn.onclick = () => {
     state.myName = nameInput.value.trim() || "Host";
-    localStorage.setItem('name', state.myName);
     state.minRange = parseInt(minRangeInput.value, 10);
     state.maxRange = parseInt(maxRangeInput.value, 10);
     state.timeLimit = parseInt(timeLimitInput.value, 10);
@@ -601,7 +685,6 @@ createRoomBtn.onclick = () => {
 
 joinRoomBtn.onclick = () => {
     state.myName = nameInput.value.trim() || "Guest";
-    localStorage.setItem('name', state.myName);
     state.isHost = false;
     initPeer();
 };
@@ -660,4 +743,3 @@ document.getElementById('web-logo').onclick = () => { window.location.href = '..
 state.theme = localStorage.getItem('theme') || 'light';
 updateThemeUI();
 updateLanguageUI();
-if (state.myName) nameInput.value = state.myName;
