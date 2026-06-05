@@ -469,7 +469,6 @@ input:focus {
     letter-spacing: 0.05em;
 }
 
-/* Buttons */
 .btn {
     padding: 0.875rem 1.5rem;
     border-radius: var(--rounded-md);
@@ -484,6 +483,7 @@ input:focus {
     align-items: center;
     justify-content: center;
     box-shadow: var(--shadow-sm);
+    margin: 0 auto;
 }
 
 .btn:hover {
@@ -574,6 +574,50 @@ input:focus {
 .flash-overlay.active {
     opacity: 1;
     transition: none;
+}
+
+.players-list {
+    text-align: left;
+    max-width: 320px;
+    margin: 1.5rem auto;
+    padding: 1rem;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--rounded-md);
+    background-color: var(--surface-soft);
+}
+
+.players-list p {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.players-list p:last-child {
+    margin-bottom: 0;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.host-badge {
+    background-color: var(--primary);
+    color: var(--text-on-dark);
+}
+
+.guest-badge {
+    background-color: var(--border-soft);
+    color: var(--text-secondary);
+}
+
+.guest-badge.ready {
+    background-color: var(--success-color);
+    color: white;
 }
 
 /* Footer */

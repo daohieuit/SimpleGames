@@ -1,7 +1,6 @@
 /**
- * Guess Number - P2P Logic
- * Following SaaS-Brutalist design principles
- * 100% Identical structure to Guess Word
+ * Guess Number 2 - P2P Logic
+ * Wordle-style digit guessing game
  */
 
 const state = {
@@ -13,13 +12,9 @@ const state = {
     roomId: '',
     currentPhase: 'home',
     isConnected: false,
-    minRange: 0,
-    maxRange: 100,
-    timeLimit: 15,
+    digitCount: 4, // 3 to 6 digits, default 4
     mySecret: null,
-    opponentSecret: null,
-    timeLeft: 0,
-    timerInterval: null,
+    opponentSecret: null, // Just a flag or value when they submit
     isMyTurn: false,
     gameActive: false,
     language: localStorage.getItem('language') || 'en',
@@ -37,27 +32,24 @@ const wrongSound = new Audio('../../assets/mp3/wrong.mp3');
 const phases = {
     home: document.getElementById('home-phase'),
     lobby: document.getElementById('lobby-phase'),
+    setup: document.getElementById('setup-phase'),
     battle: document.getElementById('battle-phase'),
     gameOver: document.getElementById('game-over-phase')
 };
 
 const lobbyStatus = document.getElementById('lobby-status');
 const roomInfo = document.getElementById('room-info');
-const wordSubmission = document.getElementById('word-submission');
 const nameInput = document.getElementById('name-input');
-const minRangeInput = document.getElementById('min-range-input');
-const maxRangeInput = document.getElementById('max-range-input');
-const timeLimitInput = document.getElementById('time-limit-input');
+const digitCountInput = document.getElementById('digit-count-input');
 const customRoomInput = document.getElementById('custom-room-input');
 const roomCodeInput = document.getElementById('room-code-input');
 const createRoomBtn = document.getElementById('create-room-btn');
 const joinRoomBtn = document.getElementById('join-room-btn');
 const displayRoomCode = document.getElementById('display-room-code');
-const secretNumberInput = document.getElementById('secret-number-input');
-const submitWordsBtn = document.getElementById('submit-words-btn');
+const startGameBtn = document.getElementById('start-game-btn');
+const lobbyControls = document.getElementById('lobby-controls');
+const confirmSecretBtn = document.getElementById('confirm-secret-btn');
 const turnIndicator = document.getElementById('turn-indicator');
-const timerDisplay = document.getElementById('timer-display');
-const guessInput = document.getElementById('guess-input');
 const guessBtn = document.getElementById('guess-btn');
 const winnerText = document.getElementById('winner-text');
 const secretRevealText = document.getElementById('secret-reveal-text');
@@ -107,86 +99,82 @@ window.addEventListener('load', () => {
 // Translations
 const translations = {
     en: {
-        title: "Guess Number",
-        welcome: "Welcome to Guess Number",
+        title: "Guess Number 2",
+        welcome: "Welcome to Guess Number 2",
         nameLabel: "Your Name:",
         namePlaceholder: "Enter your name",
-        minLabel: "Min:",
-        maxLabel: "Max:",
-        timeLabel: "Time Limit (s):",
+        digitsLabel: "Digit Count:",
         roomLabel: "Room ID:",
         create: "Create Room",
         join: "Join Room",
         waitingOpp: "Waiting for Opponent...",
         oppConnected: "Opponent Connected!",
         roomIdLabel: "Room ID:",
-        submitTitle: "Set Your Number",
-        rangeHint: (min, max) => `Choose a number between ${min} and ${max}.`,
-        ready: "Ready!",
+        setupTitle: "Set Your Secret Number",
+        setupHint: (digits) => `Enter a ${digits}-digit secret number. Your opponent will have to guess this number.`,
+        confirmSecret: "Confirm Secret Number",
+        waitingOppReady: "Waiting for opponent to set secret...",
         yourTurn: "Your Turn!",
         oppTurn: "Opponent's Turn...",
-        higher: "Higher",
-        lower: "Lower",
-        waitingGuess: "Waiting for guess",
         win: "You Won! 🎉",
         lose: "You Lost...",
         reveal: (num) => `The secret number was: ${num}`,
-        invalidRange: "Number must be within range!",
-        numRequired: "Please enter a number!",
-        timeout: "Time's up!",
+        numRequired: "Please enter all digits!",
+        numInvalid: "Please enter numbers only!",
         playAgain: "Play Again",
         opponent: "Opponent",
         you: "You",
-        secretLabel: "Secret Number:",
+        secretLabel: "Your Secret:",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
         hostBadge: "Host",
         guestBadge: "Guest",
         waitingStatus: "Waiting...",
         readyStatus: "Ready",
-        defaultHost: "Player #1",
-        defaultGuest: "Player #2"
+        btnStart: "Start Game",
+        myGuessesHeader: "Your Guesses (Target: Opponent)",
+        oppGuessesHeader: "Opponent's Guesses (Target: You)",
+        btnGuess: "Guess",
+        lobbyConfigHint: (digits) => `Guessing length: ${digits} digits.`
     },
     vi: {
-        title: "Đoán Số",
-        welcome: "Chào mừng đến với Đoán Số",
+        title: "Đoán Số 2",
+        welcome: "Chào mừng đến với Đoán Số 2",
         nameLabel: "Tên của bạn:",
         namePlaceholder: "Nhập tên của bạn",
-        minLabel: "Min:",
-        maxLabel: "Max:",
-        timeLabel: "Thời gian (giây):",
+        digitsLabel: "Số chữ số:",
         roomLabel: "Mã phòng:",
         create: "Tạo Phòng",
         join: "Vào Phòng",
         waitingOpp: "Đang đợi đối thủ...",
         oppConnected: "Đối thủ đã kết nối!",
         roomIdLabel: "Mã phòng:",
-        submitTitle: "Nhập số của bạn",
-        rangeHint: (min, max) => `Chọn một số từ ${min} đến ${max}.`,
-        ready: "Sẵn sàng!",
+        setupTitle: "Thiết lập số bí mật của bạn",
+        setupHint: (digits) => `Nhập số có ${digits} chữ số. Đối thủ sẽ phải đoán số này của bạn.`,
+        confirmSecret: "Xác Nhận Số Bí Mật",
+        waitingOppReady: "Đang đợi đối thủ thiết lập số...",
         yourTurn: "Lượt của bạn!",
         oppTurn: "Lượt đối thủ...",
-        higher: "Cao hơn",
-        lower: "Thấp hơn",
-        waitingGuess: "Đang đợi đoán",
         win: "Bạn Thắng! 🎉",
         lose: "Bạn Thua...",
         reveal: (num) => `Số bí mật là: ${num}`,
-        invalidRange: "Số phải nằm trong khoảng cho phép!",
-        numRequired: "Vui lòng nhập số!",
-        timeout: "Hết giờ!",
+        numRequired: "Vui lòng nhập đủ các chữ số!",
+        numInvalid: "Vui lòng chỉ nhập số!",
         playAgain: "Chơi lại",
         opponent: "Đối thủ",
         you: "Bạn",
-        secretLabel: "Số bí mật:",
+        secretLabel: "Số bí mật của bạn:",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
         hostBadge: "Host",
         guestBadge: "Khách",
         waitingStatus: "Đang đợi...",
         readyStatus: "Sẵn sàng",
-        defaultHost: "Người chơi #1",
-        defaultGuest: "Người chơi #2"
+        btnStart: "Bắt Đầu Game",
+        myGuessesHeader: "Lịch sử đoán của bạn (Đối thủ)",
+        oppGuessesHeader: "Lịch sử đoán của đối thủ (Bạn)",
+        btnGuess: "Gửi Dự Đoán",
+        lobbyConfigHint: (digits) => `Độ dài số đoán: ${digits} chữ số.`
     }
 };
 
@@ -201,8 +189,8 @@ function showPhase(phaseName) {
 function updateLanguageUI() {
     const t = translations[state.language];
     document.documentElement.lang = state.language;
-    document.querySelector('h1').textContent = t.title;
-    // Check if roomParam exists to show dynamic welcome text, otherwise default
+    document.getElementById('game-title-header').textContent = t.title;
+    
     const urlParams = new URLSearchParams(window.location.search);
     const roomParam = urlParams.get('room');
     if (roomParam) {
@@ -210,59 +198,59 @@ function updateLanguageUI() {
     } else {
         document.getElementById('welcome-text').textContent = t.welcome;
     }
+    
     document.getElementById('label-name').textContent = t.nameLabel;
     nameInput.placeholder = t.namePlaceholder;
-    document.getElementById('label-min-range').textContent = t.minLabel;
-    document.getElementById('label-max-range').textContent = t.maxLabel;
-    document.getElementById('label-time-limit').textContent = t.timeLabel;
+    document.getElementById('label-digit-count').textContent = t.digitsLabel;
     document.getElementById('label-custom-room').textContent = t.roomLabel;
     createRoomBtn.textContent = t.create;
     joinRoomBtn.textContent = t.join;
     
-    // Lobby Status
+    // Lobby Phase
     if (state.isConnected) {
         lobbyStatus.textContent = t.oppConnected;
+        document.getElementById('guest-status-badge').textContent = t.readyStatus;
+        document.getElementById('guest-status-badge').classList.add('ready');
     } else {
         lobbyStatus.textContent = t.waitingOpp;
-    }
-    
-    // Update lobby names & badges
-    const hostName = (state.isHost ? state.myName : state.opponentName) || (state.isHost ? t.defaultHost : t.defaultHost);
-    const guestName = (state.isHost ? state.opponentName : state.myName) || (state.isHost ? t.defaultGuest : t.defaultGuest);
-    document.getElementById('player-host-name').textContent = hostName;
-    document.getElementById('player-guest-name').textContent = guestName;
-    
-    document.querySelector('.host-badge').textContent = t.hostBadge;
-    document.querySelector('.guest-badge').textContent = t.guestBadge;
-
-    const badge = document.getElementById('guest-status-badge');
-    const guestIsReady = state.isHost ? (state.opponentSecret !== null) : (state.mySecret !== null);
-    if (state.isConnected) {
-        if (guestIsReady) {
-            badge.textContent = t.readyStatus;
-            badge.classList.add('ready');
-        } else {
-            badge.textContent = t.waitingStatus;
-            badge.classList.remove('ready');
-        }
-    } else {
-        badge.textContent = t.waitingStatus;
-        badge.classList.remove('ready');
+        document.getElementById('guest-status-badge').textContent = t.waitingStatus;
+        document.getElementById('guest-status-badge').classList.remove('ready');
     }
     
     document.getElementById('room-id-label').firstChild.textContent = t.roomIdLabel + " ";
-    document.getElementById('submit-words-title').textContent = t.submitTitle;
-    document.getElementById('range-hint').textContent = t.rangeHint(state.minRange, state.maxRange);
-    submitWordsBtn.textContent = submitWordsBtn.disabled ? "..." : (state.mySecret !== null ? t.waitingOpp : t.ready);
-    playAgainBtn.textContent = t.playAgain;
-    if (copyLinkBtn) copyLinkBtn.textContent = t.copyLink;
-
-    document.querySelector('.opponent-area h3').textContent = state.opponentName || t.opponent;
-    document.querySelector('.my-area h3').textContent = state.myName || t.you;
-    if (state.mySecret !== null) {
+    document.getElementById('game-config-hint').innerHTML = t.lobbyConfigHint(state.digitCount);
+    document.getElementById('display-digit-count').textContent = state.digitCount;
+    startGameBtn.textContent = t.btnStart;
+    
+    // Setup Phase
+    document.getElementById('setup-title').textContent = t.setupTitle;
+    document.getElementById('setup-digit-count').textContent = state.digitCount;
+    document.getElementById('setup-hint').textContent = t.setupHint(state.digitCount);
+    confirmSecretBtn.textContent = t.confirmSecret;
+    
+    // Battle Phase
+    document.getElementById('panel-my-guesses').textContent = t.myGuessesHeader;
+    document.getElementById('panel-opponent-guesses').textContent = t.oppGuessesHeader;
+    guessBtn.textContent = t.btnGuess;
+    
+    if (state.mySecret) {
         document.getElementById('my-secret-display').firstChild.textContent = t.secretLabel + " ";
     }
     
+    // Game Over Phase
+    playAgainBtn.textContent = t.playAgain;
+    if (copyLinkBtn) copyLinkBtn.textContent = t.copyLink;
+    
+    // Badges
+    document.querySelector('.host-badge').textContent = t.hostBadge;
+    if (!state.isHost) {
+        document.querySelector('.guest-badge').textContent = t.guestBadge;
+    }
+    
+    // Player names
+    document.getElementById('player-host-name').textContent = (state.isHost ? state.myName : state.opponentName) || "Host";
+    document.getElementById('player-guest-name').textContent = (state.isHost ? state.opponentName : state.myName) || "Guest";
+
     langToggle.textContent = state.language === 'en' ? 'VI' : 'US';
     roomCodeInput.placeholder = state.language === 'en' ? "Enter Room ID" : "Nhập mã phòng";
 }
@@ -298,7 +286,7 @@ function triggerFlash() {
     setTimeout(() => flash.classList.remove('active'), 800);
 }
 
-// Fetch TURN server credentials dynamically
+// Get TURN server credentials
 let cachedIceServers = null;
 async function getIceServers() {
     if (cachedIceServers) return cachedIceServers;
@@ -318,7 +306,7 @@ async function getIceServers() {
     }
 }
 
-// Peer Logic
+// PeerJS Init
 async function initPeer(id = null) {
     const iceServers = await getIceServers();
     
@@ -335,7 +323,6 @@ async function initPeer(id = null) {
 
     state.peer = new Peer(id, peerOptions);
 
-    // Signaling Heartbeat
     let heartbeat;
     state.peer.on('open', (peerId) => {
         const roomCode = state.isHost ? state.roomId : peerId;
@@ -351,8 +338,9 @@ async function initPeer(id = null) {
         if (state.isHost) {
             showPhase('lobby');
             roomInfo.style.display = 'flex';
+            document.getElementById('player-host-name').textContent = state.myName || "Host";
         } else {
-            connectToHost('guessnumber-v1-' + roomCodeInput.value.trim());
+            connectToHost('guessdigits-v1-' + roomCodeInput.value.trim());
         }
     });
 
@@ -371,7 +359,7 @@ async function initPeer(id = null) {
     });
 
     state.peer.on('disconnected', () => {
-        console.warn("Signaling disconnected. Attempting reconnect...");
+        console.warn("Signaling disconnected. Reconnecting...");
         state.peer.reconnect();
     });
 
@@ -379,7 +367,6 @@ async function initPeer(id = null) {
         clearInterval(heartbeat);
         console.error(err);
         
-        const t = translations[state.language];
         if (err.type === 'unavailable-id') {
             alert(state.language === 'en' ? "Room code already in use or error. Try again." : "Mã phòng đã được sử dụng hoặc có lỗi. Thử lại.");
             location.reload();
@@ -423,8 +410,6 @@ function handleConnectionClose() {
     
     updateReconnectMsg();
     
-    if (state.timerInterval) clearInterval(state.timerInterval);
-    
     state.reconnectTimer = setInterval(() => {
         timeLeft--;
         if (timeLeft <= 0) {
@@ -444,7 +429,7 @@ function handleConnectionClose() {
                 if (state.conn) {
                     try { state.conn.close(); } catch(e){}
                 }
-                state.conn = state.peer.connect('guessnumber-v1-' + state.roomId, { reliable: true });
+                state.conn = state.peer.connect('guessdigits-v1-' + state.roomId, { reliable: true });
                 setupConnection();
             }
         }, 3000);
@@ -462,42 +447,33 @@ function setupConnection() {
             if (state.reconnectTimer) clearInterval(state.reconnectTimer);
             if (state.reconnectInterval) clearInterval(state.reconnectInterval);
             hideToast();
-            showToast(state.language === 'en' ? "Reconnected successfully!" : "Kết nối lại thành công!");
-            
-            if (state.currentPhase === 'battle') {
-                updateTurnUI();
-            }
+            showToast(state.language === 'en' ? "Reconnected successfully!" : "Kết nối lại công!");
         }
         
         state.isConnected = true;
-        const t = translations[state.language];
-        lobbyStatus.textContent = t.oppConnected;
         
         if (state.isHost) {
             state.conn.send({
                 type: 'init-game',
-                config: { min: state.minRange, max: state.maxRange, time: state.timeLimit, hostName: state.myName }
+                config: { digitCount: state.digitCount, hostName: state.myName }
             });
+            lobbyControls.style.display = 'block'; // Show start game button
         } else {
             state.conn.send({ type: 'guest-name', name: state.myName });
         }
         
-        roomInfo.style.display = 'none';
-        wordSubmission.style.display = 'block';
-        document.getElementById('hint-min').textContent = state.minRange;
-        document.getElementById('hint-max').textContent = state.maxRange;
+        updateLanguageUI();
     };
 
     if (state.conn.open) {
         handleOpen();
     } else {
-        // Handshake Timeout
         connTimeout = setTimeout(() => {
             if (!state.conn.open) {
                 console.error("Connection Handshake Timeout");
                 alert(state.language === 'en' ? 
-                    "Connection timed out. Try switching to 4G/LTE or check if both players have a stable signal." : 
-                    "Kết nối quá hạn. Hãy thử chuyển sang 4G/LTE hoặc kiểm tra xem cả hai người chơi có tín hiệu ổn định không.");
+                    "Connection timed out. Try switching to 4G/LTE or check signal." : 
+                    "Kết nối quá hạn. Hãy thử chuyển sang 4G/LTE hoặc kiểm tra sóng.");
                 location.reload();
             }
         }, 20000);
@@ -508,38 +484,35 @@ function setupConnection() {
     state.conn.on('data', (data) => {
         switch (data.type) {
             case 'init-game':
-                state.minRange = data.config.min;
-                state.maxRange = data.config.max;
-                state.timeLimit = data.config.time;
+                state.digitCount = data.config.digitCount;
                 state.opponentName = data.config.hostName;
-                document.getElementById('hint-min').textContent = state.minRange;
-                document.getElementById('hint-max').textContent = state.maxRange;
                 updateLanguageUI();
                 break;
             case 'guest-name':
                 state.opponentName = data.name;
                 updateLanguageUI();
-                // Send host info back if I am host
                 if (state.isHost) {
                     state.conn.send({
                         type: 'init-game',
-                        config: { min: state.minRange, max: state.maxRange, time: state.timeLimit, hostName: state.myName }
+                        config: { digitCount: state.digitCount, hostName: state.myName }
                     });
                 }
                 break;
+            case 'start-setup':
+                enterSetupPhase();
+                break;
             case 'ready':
-                state.opponentSecret = data.secret;
-                updateLanguageUI();
+                state.opponentSecret = true; // Opponent has finished setup
                 checkStartBattle();
                 break;
             case 'start-battle':
                 startBattle(data.firstTurnId);
                 break;
             case 'guess':
-                handleIncomingGuess(data.value);
+                handleIncomingGuess(data.guess);
                 break;
-            case 'hint':
-                handleIncomingHint(data.hint, data.value);
+            case 'guess-result':
+                handleGuessResult(data.guess, data.result);
                 break;
             case 'game-over':
                 endGame(data.winner === state.peer.id, data.secret);
@@ -555,9 +528,90 @@ function setupConnection() {
     });
 }
 
-// Game Logic
+// Generate Digit Input Boxes for Setup and Guessing
+function generateDigitInputs(containerId, prefix) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    
+    for (let i = 0; i < state.digitCount; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.pattern = '[0-9]';
+        input.inputMode = 'numeric';
+        input.maxLength = 1;
+        input.className = 'digit-box';
+        input.id = `${prefix}-${i}`;
+        
+        // Handle input focus jumping
+        input.oninput = (e) => {
+            // Allow only numbers
+            input.value = input.value.replace(/[^0-9]/g, '');
+            if (input.value.length === 1 && i < state.digitCount - 1) {
+                document.getElementById(`${prefix}-${i+1}`).focus();
+            }
+        };
+        
+        input.onkeydown = (e) => {
+            if (e.key === 'Backspace' && input.value.length === 0 && i > 0) {
+                document.getElementById(`${prefix}-${i-1}`).focus();
+            }
+        };
+        
+        container.appendChild(input);
+    }
+}
+
+function getDigitValue(prefix) {
+    let val = '';
+    for (let i = 0; i < state.digitCount; i++) {
+        const el = document.getElementById(`${prefix}-${i}`);
+        val += el ? el.value.trim() : '';
+    }
+    return val;
+}
+
+function clearDigitValues(prefix) {
+    for (let i = 0; i < state.digitCount; i++) {
+        const el = document.getElementById(`${prefix}-${i}`);
+        if (el) el.value = '';
+    }
+    // focus on first
+    const first = document.getElementById(`${prefix}-0`);
+    if (first) first.focus();
+}
+
+// Game Phase Transitions
+function enterSetupPhase() {
+    showPhase('setup');
+    generateDigitInputs('secret-inputs-row', 'secret-input');
+    // Focus first element
+    setTimeout(() => {
+        const first = document.getElementById('secret-input-0');
+        if (first) first.focus();
+    }, 100);
+}
+
+confirmSecretBtn.onclick = () => {
+    const secret = getDigitValue('secret-input');
+    const t = translations[state.language];
+    
+    if (secret.length < state.digitCount) {
+        return showToast(t.numRequired, true);
+    }
+    if (!/^\d+$/.test(secret)) {
+        return showToast(t.numInvalid, true);
+    }
+    
+    state.mySecret = secret;
+    confirmSecretBtn.disabled = true;
+    document.getElementById('setup-status-msg').textContent = t.waitingOppReady;
+    
+    state.conn.send({ type: 'ready' });
+    checkStartBattle();
+};
+
 function checkStartBattle() {
-    if (state.mySecret !== null && state.opponentSecret !== null) {
+    if (state.mySecret !== null && state.opponentSecret) {
         if (state.isHost) {
             const firstTurnId = Math.random() < 0.5 ? state.peer.id : state.conn.peer;
             state.conn.send({ type: 'start-battle', firstTurnId });
@@ -570,7 +624,10 @@ function startBattle(firstTurnId) {
     showPhase('battle');
     state.gameActive = true;
     state.isMyTurn = (firstTurnId === state.peer.id);
+    
     document.getElementById('displayed-my-secret').textContent = state.mySecret;
+    generateDigitInputs('guess-inputs-row', 'guess-input');
+    
     updateTurnUI();
 }
 
@@ -578,109 +635,132 @@ function updateTurnUI() {
     const t = translations[state.language];
     turnIndicator.textContent = state.isMyTurn ? t.yourTurn : t.oppTurn;
     document.querySelector('.guess-input-container').style.display = state.isMyTurn ? 'flex' : 'none';
-    timerDisplay.classList.toggle('visible', true);
-    timerDisplay.classList.toggle('my-turn', state.isMyTurn);
     
-    startTimer();
-}
-
-function startTimer() {
-    clearInterval(state.timerInterval);
-    state.timeLeft = state.timeLimit;
-    updateTimerDisplay();
-    
-    state.timerInterval = setInterval(() => {
-        state.timeLeft--;
-        updateTimerDisplay();
-        if (state.timeLeft <= 0) {
-            clearInterval(state.timerInterval);
-            if (state.isMyTurn) handleMyTimeout();
-        }
-    }, 1000);
-}
-
-function updateTimerDisplay() {
-    timerDisplay.textContent = state.timeLeft;
-}
-
-function handleMyTimeout() {
-    showToast(translations[state.language].timeout, true);
-    state.isMyTurn = false;
-    state.conn.send({ type: 'guess', value: null });
-    updateTurnUI();
-}
-
-function handleGuess() {
-    if (!state.isMyTurn || !state.gameActive) return;
-    const value = guessInput.value.trim();
-    if (value === "") return showToast(translations[state.language].numRequired, true);
-    const num = parseInt(value, 10);
-    state.conn.send({ type: 'guess', value: num });
-    guessInput.value = '';
-    state.isMyTurn = false;
-    updateTurnUI();
-}
-
-function handleIncomingGuess(value) {
-    if (value === null) {
-        state.isMyTurn = true;
-        updateTurnUI();
-        return;
+    if (state.isMyTurn) {
+        setTimeout(() => {
+            const first = document.getElementById('guess-input-0');
+            if (first) first.focus();
+        }, 100);
     }
-    const guess = parseInt(value, 10);
-    const secret = parseInt(state.mySecret, 10);
+}
+
+// Compare Secret and Guess
+function calculateFeedback(secret, guess) {
+    const size = secret.length;
+    const feedback = Array(size).fill('incorrect'); // 'correct', 'wrong-pos', 'incorrect'
+    const secretUsed = Array(size).fill(false);
+    const guessUsed = Array(size).fill(false);
+
+    // Step 1: Exact matches (Green)
+    for (let i = 0; i < size; i++) {
+        if (guess[i] === secret[i]) {
+            feedback[i] = 'correct';
+            secretUsed[i] = true;
+            guessUsed[i] = true;
+        }
+    }
+
+    // Step 2: Digits in secret but wrong position (Yellow)
+    for (let i = 0; i < size; i++) {
+        if (guessUsed[i]) continue;
+        for (let j = 0; j < size; j++) {
+            if (!secretUsed[j] && guess[i] === secret[j]) {
+                feedback[i] = 'wrong-pos';
+                secretUsed[j] = true;
+                break;
+            }
+        }
+    }
+    return feedback;
+}
+
+// Play logic
+guessBtn.onclick = handleMyGuessSubmit;
+// Allow submitting with Enter on any guess-input
+document.getElementById('guess-inputs-row').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleMyGuessSubmit();
+    }
+});
+
+function handleMyGuessSubmit() {
+    if (!state.isMyTurn || !state.gameActive) return;
     
-    let hint = '';
-    if (guess === secret) {
-        hint = 'correct';
+    const guess = getDigitValue('guess-input');
+    const t = translations[state.language];
+    
+    if (guess.length < state.digitCount) {
+        return showToast(t.numRequired, true);
+    }
+    
+    state.conn.send({ type: 'guess', guess });
+    state.isMyTurn = false;
+    updateTurnUI();
+}
+
+function handleIncomingGuess(guess) {
+    triggerFlash();
+    const result = calculateFeedback(state.mySecret, guess);
+    
+    // Play correct/wrong sound
+    const allCorrect = result.every(r => r === 'correct');
+    if (allCorrect) {
         correctSound.play().catch(e => console.warn("Sound play deferred"));
-        state.conn.send({ type: 'hint', hint: 'correct', value: guess });
-        endGame(false, state.opponentSecret);
+    } else {
+        wrongSound.play().catch(e => console.warn("Sound play deferred"));
+    }
+    
+    // Add to Opponent's guess history panel
+    // (Opponent targets me, so we show what opponent guessed and color hint)
+    addHistoryRow('opponent-history', guess, result);
+    
+    // Reply back with colors
+    state.conn.send({ type: 'guess-result', guess, result });
+    
+    if (allCorrect) {
+        endGame(false, state.mySecret); // I lost, opponent guessed correctly
         state.conn.send({ type: 'game-over', winner: state.conn.peer, secret: state.mySecret });
     } else {
-        hint = guess < secret ? 'higher' : 'lower';
-        wrongSound.play().catch(e => console.warn("Sound play deferred"));
-        state.conn.send({ type: 'hint', hint, value: guess });
         state.isMyTurn = true;
         updateTurnUI();
     }
-    updateHintUI(hint, guess, false);
 }
 
-function handleIncomingHint(hint, value) {
-    if (hint === 'correct') {
+function handleGuessResult(guess, result) {
+    triggerFlash();
+    
+    const allCorrect = result.every(r => r === 'correct');
+    if (allCorrect) {
         correctSound.play().catch(e => console.warn("Sound play deferred"));
-        endGame(true, state.opponentSecret);
+        endGame(true, guess); // I won, this was the secret number
     } else {
         wrongSound.play().catch(e => console.warn("Sound play deferred"));
-        updateHintUI(hint, value, true);
         state.isMyTurn = false;
         updateTurnUI();
     }
+    
+    // Add to My guess history panel (Target: Opponent)
+    addHistoryRow('my-history', guess, result);
+    clearDigitValues('guess-input');
 }
 
-function updateHintUI(hint, value, isMyGuess) {
-    const container = isMyGuess ? document.getElementById('opponent-history') : document.getElementById('my-history');
-    triggerFlash();
-
-    const guessEl = document.createElement('div');
-    guessEl.className = 'word-display';
+function addHistoryRow(containerId, guess, result) {
+    const container = document.getElementById(containerId);
+    const row = document.createElement('div');
+    row.className = 'history-row';
     
-    const arrow = hint === 'higher' ? '↑' : (hint === 'lower' ? '↓' : '✓');
-    const color = hint === 'higher' ? 'var(--success-color)' : (hint === 'lower' ? 'var(--error-color)' : 'var(--success-color)');
+    for (let i = 0; i < state.digitCount; i++) {
+        const cell = document.createElement('div');
+        cell.className = `digit-cell ${result[i]}`;
+        cell.textContent = guess[i];
+        row.appendChild(cell);
+    }
     
-    guessEl.innerHTML = `
-        <span style="flex: 1; text-align: left; font-size: 1rem; color: var(--text-secondary);">${value}</span>
-        <span style="color: ${color}; font-weight: 900; font-size: 2.5rem; line-height: 1;">${arrow}</span>
-    `;
-    
-    container.insertBefore(guessEl, container.firstChild);
+    container.insertBefore(row, container.firstChild);
 }
 
 function endGame(isWin, secret) {
     state.gameActive = false;
-    clearInterval(state.timerInterval);
-    timerDisplay.classList.remove('visible');
     const t = translations[state.language];
     showPhase('gameOver');
     winnerText.textContent = isWin ? t.win : t.lose;
@@ -692,32 +772,29 @@ function resetGame() {
     state.opponentSecret = null;
     state.gameActive = false;
     state.isMyTurn = false;
-    clearInterval(state.timerInterval);
-    timerDisplay.classList.remove('my-turn');
-    timerDisplay.classList.remove('visible');
     
-    document.getElementById('opponent-history').innerHTML = '';
     document.getElementById('my-history').innerHTML = '';
-    document.getElementById('displayed-my-secret').textContent = '--';
+    document.getElementById('opponent-history').innerHTML = '';
+    document.getElementById('displayed-my-secret').textContent = '----';
+    confirmSecretBtn.disabled = false;
+    document.getElementById('setup-status-msg').textContent = '';
     
-    submitWordsBtn.disabled = false;
-    submitWordsBtn.textContent = translations[state.language].ready;
-    secretNumberInput.value = '';
-    
-    wordSubmission.style.display = 'block';
-    showPhase('lobby');
+    if (state.isHost) {
+        showPhase('lobby');
+    } else {
+        // Guest waits in setup lobby too
+        showPhase('lobby');
+    }
 }
 
-// Event Listeners
+// Controls & Event Listeners
 createRoomBtn.onclick = () => {
     state.myName = nameInput.value.trim() || "Host";
-    state.minRange = parseInt(minRangeInput.value, 10);
-    state.maxRange = parseInt(maxRangeInput.value, 10);
-    state.timeLimit = parseInt(timeLimitInput.value, 10);
+    state.digitCount = parseInt(digitCountInput.value, 10);
     const customCode = customRoomInput.value.trim();
     state.roomId = customCode || Math.floor(100 + Math.random() * 900).toString();
     state.isHost = true;
-    initPeer('guessnumber-v1-' + state.roomId);
+    initPeer('guessdigits-v1-' + state.roomId);
 };
 
 joinRoomBtn.onclick = () => {
@@ -726,37 +803,31 @@ joinRoomBtn.onclick = () => {
     initPeer();
 };
 
-submitWordsBtn.onclick = () => {
-    const val = secretNumberInput.value.trim();
-    if (val === "") return showToast(translations[state.language].numRequired, true);
-    const num = parseInt(val, 10);
-    if (num < state.minRange || num > state.maxRange) return showToast(translations[state.language].invalidRange, true);
-    state.mySecret = num;
-    submitWordsBtn.disabled = true;
-    submitWordsBtn.textContent = translations[state.language].waitingOpp;
-    state.conn.send({ type: 'ready', secret: num });
-    updateLanguageUI();
-    checkStartBattle();
+startGameBtn.onclick = () => {
+    if (state.isHost && state.isConnected) {
+        state.conn.send({ type: 'start-setup' });
+        enterSetupPhase();
+    }
 };
 
-guessBtn.onclick = handleGuess;
-guessInput.onkeypress = (e) => { if (e.key === 'Enter') handleGuess(); };
 playAgainBtn.onclick = () => {
     state.conn.send({ type: 'play-again' });
     resetGame();
 };
+
 themeToggle.onclick = () => {
     state.theme = (state.theme === 'light') ? 'dark' : 'light';
     localStorage.setItem('theme', state.theme);
     updateThemeUI();
 };
+
 langToggle.onclick = () => {
     state.language = state.language === 'en' ? 'vi' : 'en';
     localStorage.setItem('language', state.language);
     updateLanguageUI();
 };
 
-// Copy room link functionality
+// Copy room link
 copyLinkBtn.onclick = async () => {
     const t = translations[state.language];
     const baseUrl = window.location.origin + window.location.pathname;
@@ -775,9 +846,14 @@ copyLinkBtn.onclick = async () => {
     }
 };
 
-document.getElementById('web-logo').onclick = () => { window.location.href = '../../index.html'; };
+document.getElementById('web-logo').onclick = () => { 
+    if (state.peer) {
+        try { state.peer.destroy(); } catch(e){}
+    }
+    window.location.href = '../../index.html'; 
+};
 
-// Init
+// Init Theme & Language
 state.theme = localStorage.getItem('theme') || 'light';
 updateThemeUI();
 updateLanguageUI();

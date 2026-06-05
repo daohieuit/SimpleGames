@@ -4,10 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Đoán Số - Guess Number</title>
-  <meta name="description" content="Đoán Số - Trò chơi đoán số bí mật P2P kịch tính. Thử thách logic và trực giác của bạn cùng bạn bè qua kết nối trực tiếp PeerJS.">
-  <meta property="og:title" content="Đoán Số - Guess Number">
-  <meta property="og:description" content="Đoán Số - Trò chơi đoán số bí mật P2P kịch tính. Thử thách logic và trực giác của bạn cùng bạn bè qua kết nối trực tiếp PeerJS.">
+  <title>Tính Nhẩm - Quick Math</title>
+  <meta name="description" content="Tính Nhẩm - Trận chiến tính nhẩm P2P kịch tính. Giải nhanh các phép toán cộng, trừ, nhân, chia để đánh bại đối thủ của bạn.">
+  <meta property="og:title" content="Tính Nhẩm - Quick Math">
+  <meta property="og:description" content="Tính Nhẩm - Trận chiến tính nhẩm P2P kịch tính. Giải nhanh các phép toán cộng, trừ, nhân, chia để đánh bại đối thủ của bạn.">
   <meta property="og:type" content="website">
   <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon_io/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon_io/favicon-32x32.png">
@@ -25,45 +25,56 @@
   <div class="container">
     <header>
       <div class="header-top">
-        <img src="../../assets/images/hihi.png" id="web-logo" class="logo" alt="Guess Number Logo">
+        <img src="../../assets/images/hihi.png" id="web-logo" class="logo" alt="Logo">
         <div class="header-actions">
-          <div id="timer-display" class="timer">--</div>
+          <div id="timer-display" class="timer">00.000</div>
           <div class="header-toggles">
             <div id="theme-toggle" class="theme-toggle" title="Switch Theme">🌙</div>
             <div id="lang-toggle" class="lang-toggle" title="Switch Language">US</div>
           </div>
         </div>
       </div>
-      <h1>Guess Number</h1>
+      <h1 id="game-title">Quick Math</h1>
     </header>
 
     <!-- Home Phase -->
     <section id="home-phase" class="phase active">
       <div class="card">
-        <h2 id="welcome-text">Chào mừng đến với Đoán Số</h2>
+        <h2 id="welcome-text">Chào mừng đến với Tính Nhẩm</h2>
+        
         <div class="name-config">
           <label for="name-input" id="label-name">Tên của bạn:</label>
           <input type="text" id="name-input" placeholder="Nhập tên của bạn" maxlength="15">
         </div>
+
         <div class="action-group">
+          <!-- Cấu hình Độ khó -->
           <div class="host-config">
-            <label for="min-range-input" id="label-min-range">Min:</label>
-            <input type="number" id="min-range-input" value="0" min="-1000" max="1000">
+            <label for="difficulty-input" id="label-difficulty">Độ khó (1-3):</label>
+            <input type="number" id="difficulty-input" value="2" min="1" max="3">
           </div>
+
+          <!-- Cấu hình Số câu hỏi -->
           <div class="host-config">
-            <label for="max-range-input" id="label-max-range">Max:</label>
-            <input type="number" id="max-range-input" value="100" min="1" max="10000">
+            <label for="question-count-input" id="label-question-count">Số câu hỏi:</label>
+            <input type="number" id="question-count-input" value="5" min="3" max="15">
           </div>
+
+          <!-- Cấu hình Thời gian giới hạn -->
           <div class="host-config">
             <label for="time-limit-input" id="label-time-limit">Thời gian (giây):</label>
-            <input type="number" id="time-limit-input" value="15" min="5" max="60" step="5">
+            <input type="number" id="time-limit-input" value="60" min="10" max="300" step="5">
           </div>
+
           <div class="host-config">
             <label for="custom-room-input" id="label-custom-room">Mã phòng:</label>
             <input type="text" id="custom-room-input" value="000" maxlength="15">
           </div>
+
           <button id="create-room-btn" class="btn primary">Tạo Phòng</button>
+          
           <div class="divider">HOẶC</div>
+          
           <div class="join-input">
             <label for="room-code-input" class="sr-only">Mã phòng để vào</label>
             <input type="text" id="room-code-input" placeholder="Nhập mã phòng" maxlength="20">
@@ -77,6 +88,7 @@
     <section id="lobby-phase" class="phase">
       <div class="card">
         <h2 id="lobby-status">Đang đợi đối thủ...</h2>
+        
         <div id="room-info" class="room-info" style="display: none;">
           <p id="room-id-label">Mã phòng: <strong id="display-room-code">---</strong></p>
           <button id="copy-link-btn" class="btn secondary small">Copy Link</button>
@@ -87,51 +99,45 @@
           <p><span id="player-guest-name">Guest: ---</span> <span class="badge guest-badge" id="guest-status-badge">Đang đợi...</span></p>
         </div>
 
-        <div id="word-submission" style="display: none;">
-          <h3 id="submit-words-title">Nhập số của bạn</h3>
-          <p class="hint" id="range-hint">Chọn một số từ <span id="hint-min">0</span> đến <span id="hint-max">100</span>.</p>
-          <div id="word-inputs">
-            <div class="word-row">
-              <label for="secret-number-input" class="sr-only">Nhập số bí mật của bạn</label>
-              <input type="number" id="secret-number-input" placeholder="Số bí mật">
-            </div>
-          </div>
-          <button id="submit-words-btn" class="btn primary" style="margin: 2rem auto 0;">Sẵn sàng!</button>
+        <div id="lobby-controls" class="lobby-controls" style="display: none;">
+          <button id="start-game-btn" class="btn primary">Bắt Đầu Game</button>
         </div>
+        
+        <p class="hint" id="game-config-hint">Đang cấu hình phòng...</p>
       </div>
     </section>
 
-    <!-- Battle Phase -->
+    <!-- Play Phase -->
     <section id="battle-phase" class="phase">
-      <div class="game-status">
-        <h2 id="turn-indicator">Đang đợi...</h2>
-      </div>
-
-      <div class="battle-grid">
-        <div class="player-area opponent-area">
-          <h3 data-en="Opponent" data-vi="Đối thủ">Đối thủ</h3>
-          <div id="opponent-history" class="words-container">
-            <!-- Guesses will be here -->
+      <!-- Tiến độ so sánh song song -->
+      <div class="progress-container">
+        <div class="progress-row">
+          <span class="progress-label" id="label-progress-you">Bạn:</span>
+          <div class="progress-bar-bg">
+            <div id="my-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
           </div>
+          <span class="progress-text" id="my-progress-text">0/5</span>
         </div>
-
-        <div class="player-area my-area">
-          <h3 data-en="You" data-vi="Bạn">Bạn</h3>
-          <div id="my-secret-display" class="secret-display">
-            Số bí mật: <span id="displayed-my-secret">--</span>
+        <div class="progress-row">
+          <span class="progress-label" id="label-progress-opp">Đối thủ:</span>
+          <div class="progress-bar-bg">
+            <div id="opp-progress-bar" class="progress-bar-fill opponent-color" style="width: 0%;"></div>
           </div>
-          <div id="my-history" class="words-container">
-            <!-- Guesses will be here -->
-          </div>
+          <span class="progress-text" id="opp-progress-text">0/5</span>
         </div>
       </div>
 
-      <div class="guess-input-container">
-        <div class="word-row">
-          <label for="guess-input" class="sr-only">Đoán một số</label>
-          <input type="number" id="guess-input" placeholder="Đoán một số...">
+      <!-- Phép tính chính -->
+      <div class="equation-card">
+        <div class="question-number" id="question-number-display">Câu 1</div>
+        <div class="equation-display" id="equation-display">12 + 34 = ?</div>
+        
+        <div class="answer-input-row">
+          <label for="math-answer-input" class="sr-only">Đáp án</label>
+          <input type="number" id="math-answer-input" pattern="[0-9]*" inputmode="numeric" placeholder="?" autocomplete="off" autofocus>
         </div>
-        <button id="guess-btn" class="btn primary">Đoán</button>
+        <p class="input-hint" id="input-hint">Nhập đáp án và nhấn Enter hoặc nút gửi</p>
+        <button id="submit-answer-btn" class="btn primary">Gửi</button>
       </div>
     </section>
 
@@ -139,8 +145,17 @@
     <section id="game-over-phase" class="phase">
       <div class="card">
         <h2 id="winner-text">Người thắng! 🎉</h2>
-        <p id="secret-reveal-text"></p>
-        <button id="play-again-btn" class="btn primary">Chơi lại</button>
+        <div class="stats-container">
+          <div class="stat-row">
+            <span class="stat-name" id="stat-you-label">Bạn:</span>
+            <span class="stat-value" id="stat-you-time">--.--s</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-name" id="stat-opp-label">Đối thủ:</span>
+            <span class="stat-value" id="stat-opp-time">--.--s</span>
+          </div>
+        </div>
+        <button id="play-again-btn" class="btn primary" style="margin-top: 2.5rem;">Chơi lại</button>
       </div>
     </section>
 

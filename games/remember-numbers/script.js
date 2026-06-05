@@ -108,9 +108,12 @@ const translations = {
         playAgain: "Play Again",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
-        enterCode: "Please enter a room code!",
-        peerError: "Connection error. Reloading page...",
-        roomCodeInUse: "Room code already in use or error. Try again."
+        hostBadge: "Host",
+        guestBadge: "Guest",
+        waitingStatus: "Waiting...",
+        readyStatus: "Ready",
+        defaultHost: "Player #1",
+        defaultGuest: "Player #2"
     },
     vi: {
         title: "Ghi Nhớ Số",
@@ -141,7 +144,13 @@ const translations = {
         linkCopied: "Đã copy link!",
         enterCode: "Vui lòng nhập mã phòng!",
         peerError: "Lỗi kết nối. Đang tải lại trang...",
-        roomCodeInUse: "Mã phòng đã được sử dụng hoặc có lỗi. Thử lại."
+        roomCodeInUse: "Mã phòng đã được sử dụng hoặc có lỗi. Thử lại.",
+        hostBadge: "Host",
+        guestBadge: "Khách",
+        waitingStatus: "Đang đợi...",
+        readyStatus: "Sẵn sàng",
+        defaultHost: "Người chơi #1",
+        defaultGuest: "Người chơi #2"
     }
 };
 
@@ -181,6 +190,30 @@ function updateLanguageUI() {
         lobbyStatus.textContent = t.oppConnected;
     } else {
         lobbyStatus.textContent = t.waitingOpp;
+    }
+    
+    // Update lobby names & badges
+    const hostName = (state.isHost ? state.myName : state.opponentName) || (state.isHost ? t.defaultHost : t.defaultHost);
+    const guestName = (state.isHost ? state.opponentName : state.myName) || (state.isHost ? t.defaultGuest : t.defaultGuest);
+    document.getElementById('player-host-name').textContent = hostName;
+    document.getElementById('player-guest-name').textContent = guestName;
+    
+    document.querySelector('.host-badge').textContent = t.hostBadge;
+    document.querySelector('.guest-badge').textContent = t.guestBadge;
+
+    const badge = document.getElementById('guest-status-badge');
+    const guestIsReady = state.isHost ? state.opponentReady : state.myReady;
+    if (state.isConnected) {
+        if (guestIsReady) {
+            badge.textContent = t.readyStatus;
+            badge.classList.add('ready');
+        } else {
+            badge.textContent = t.waitingStatus;
+            badge.classList.remove('ready');
+        }
+    } else {
+        badge.textContent = t.waitingStatus;
+        badge.classList.remove('ready');
     }
     
     document.getElementById('room-id-label').firstChild.textContent = t.roomIdLabel + " ";
@@ -427,6 +460,7 @@ function setupConnection() {
                 break;
             case 'ready':
                 state.opponentReady = true;
+                updateLanguageUI();
                 checkStartGame();
                 break;
             case 'init-game':
@@ -701,6 +735,7 @@ submitWordsBtn.onclick = () => {
     submitWordsBtn.textContent = translations[state.language].waitingOppReady;
     
     state.conn.send({ type: 'ready' });
+    updateLanguageUI();
     checkStartGame();
 };
 

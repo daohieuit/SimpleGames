@@ -4,10 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Đoán Số - Guess Number</title>
-  <meta name="description" content="Đoán Số - Trò chơi đoán số bí mật P2P kịch tính. Thử thách logic và trực giác của bạn cùng bạn bè qua kết nối trực tiếp PeerJS.">
-  <meta property="og:title" content="Đoán Số - Guess Number">
-  <meta property="og:description" content="Đoán Số - Trò chơi đoán số bí mật P2P kịch tính. Thử thách logic và trực giác của bạn cùng bạn bè qua kết nối trực tiếp PeerJS.">
+  <title>Đoán Số 2 - Guess Number 2</title>
+  <meta name="description" content="Đoán Số 2 - Trò chơi đoán số bí mật P2P kiểu Wordle cực kịch tính. Bẻ khóa số đối thủ bằng logic và gợi ý màu sắc.">
+  <meta property="og:title" content="Đoán Số 2 - Guess Number 2">
+  <meta property="og:description" content="Đoán Số 2 - Trò chơi đoán số bí mật P2P kiểu Wordle cực kịch tính. Bẻ khóa số đối thủ bằng logic và gợi ý màu sắc.">
   <meta property="og:type" content="website">
   <link rel="apple-touch-icon" sizes="180x180" href="../../assets/favicon_io/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon_io/favicon-32x32.png">
@@ -15,7 +15,6 @@
   <link rel="manifest" href="../../assets/favicon_io/site.webmanifest">
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Alumni+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://db.onlinewebfonts.com/c/84cb021d5f9af287ffff84b61beef6dc?family=clockicons" rel="stylesheet">
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 
@@ -25,45 +24,43 @@
   <div class="container">
     <header>
       <div class="header-top">
-        <img src="../../assets/images/hihi.png" id="web-logo" class="logo" alt="Guess Number Logo">
+        <img src="../../assets/images/hihi.png" id="web-logo" class="logo" alt="Logo">
         <div class="header-actions">
-          <div id="timer-display" class="timer">--</div>
           <div class="header-toggles">
             <div id="theme-toggle" class="theme-toggle" title="Switch Theme">🌙</div>
             <div id="lang-toggle" class="lang-toggle" title="Switch Language">US</div>
           </div>
         </div>
       </div>
-      <h1>Guess Number</h1>
+      <h1 id="game-title-header">Guess Number 2</h1>
     </header>
 
-    <!-- Home Phase -->
+    <!-- Home/Lobby Setup Phase -->
     <section id="home-phase" class="phase active">
       <div class="card">
-        <h2 id="welcome-text">Chào mừng đến với Đoán Số</h2>
+        <h2 id="welcome-text">Chào mừng đến với Đoán Số 2</h2>
+        
         <div class="name-config">
           <label for="name-input" id="label-name">Tên của bạn:</label>
           <input type="text" id="name-input" placeholder="Nhập tên của bạn" maxlength="15">
         </div>
+
         <div class="action-group">
+          <!-- Cấu hình số chữ số (chỉ Host chỉnh, Guest xem) -->
           <div class="host-config">
-            <label for="min-range-input" id="label-min-range">Min:</label>
-            <input type="number" id="min-range-input" value="0" min="-1000" max="1000">
+            <label for="digit-count-input" id="label-digit-count">Số chữ số (3-6):</label>
+            <input type="number" id="digit-count-input" value="4" min="3" max="6">
           </div>
-          <div class="host-config">
-            <label for="max-range-input" id="label-max-range">Max:</label>
-            <input type="number" id="max-range-input" value="100" min="1" max="10000">
-          </div>
-          <div class="host-config">
-            <label for="time-limit-input" id="label-time-limit">Thời gian (giây):</label>
-            <input type="number" id="time-limit-input" value="15" min="5" max="60" step="5">
-          </div>
+
           <div class="host-config">
             <label for="custom-room-input" id="label-custom-room">Mã phòng:</label>
             <input type="text" id="custom-room-input" value="000" maxlength="15">
           </div>
+
           <button id="create-room-btn" class="btn primary">Tạo Phòng</button>
+          
           <div class="divider">HOẶC</div>
+          
           <div class="join-input">
             <label for="room-code-input" class="sr-only">Mã phòng để vào</label>
             <input type="text" id="room-code-input" placeholder="Nhập mã phòng" maxlength="20">
@@ -73,10 +70,11 @@
       </div>
     </section>
 
-    <!-- Lobby Phase -->
+    <!-- Lobby Phase (Đợi người chơi kết nối và sẵn sàng bấm Bắt đầu) -->
     <section id="lobby-phase" class="phase">
       <div class="card">
         <h2 id="lobby-status">Đang đợi đối thủ...</h2>
+        
         <div id="room-info" class="room-info" style="display: none;">
           <p id="room-id-label">Mã phòng: <strong id="display-room-code">---</strong></p>
           <button id="copy-link-btn" class="btn secondary small">Copy Link</button>
@@ -87,51 +85,63 @@
           <p><span id="player-guest-name">Guest: ---</span> <span class="badge guest-badge" id="guest-status-badge">Đang đợi...</span></p>
         </div>
 
-        <div id="word-submission" style="display: none;">
-          <h3 id="submit-words-title">Nhập số của bạn</h3>
-          <p class="hint" id="range-hint">Chọn một số từ <span id="hint-min">0</span> đến <span id="hint-max">100</span>.</p>
-          <div id="word-inputs">
-            <div class="word-row">
-              <label for="secret-number-input" class="sr-only">Nhập số bí mật của bạn</label>
-              <input type="number" id="secret-number-input" placeholder="Số bí mật">
-            </div>
-          </div>
-          <button id="submit-words-btn" class="btn primary" style="margin: 2rem auto 0;">Sẵn sàng!</button>
+        <div id="lobby-controls" class="lobby-controls" style="display: none;">
+          <button id="start-game-btn" class="btn primary">Bắt Đầu Game</button>
         </div>
+        
+        <p class="hint" id="game-config-hint">Độ dài số đoán: <span id="display-digit-count">4</span> chữ số.</p>
       </div>
     </section>
 
-    <!-- Battle Phase -->
+    <!-- Setup Secret Phase (Sau khi bấm start game, nhập số bí mật của mình) -->
+    <section id="setup-phase" class="phase">
+      <div class="card">
+        <h2 id="setup-title">Thiết lập số bí mật</h2>
+        <p class="hint" id="setup-hint">Nhập số có <span id="setup-digit-count">4</span> chữ số. Đối thủ sẽ phải đoán số này.</p>
+        
+        <div class="secret-setup-container">
+          <div id="secret-inputs-row" class="digits-input-row">
+            <!-- Ô input chữ số sẽ được generate động bằng JS dựa trên digitCount -->
+          </div>
+          <button id="confirm-secret-btn" class="btn primary">Xác Nhận Số Bí Mật</button>
+        </div>
+        <p id="setup-status-msg" class="waiting-msg"></p>
+      </div>
+    </section>
+
+    <!-- Battle Phase (Chơi game chính) -->
     <section id="battle-phase" class="phase">
       <div class="game-status">
         <h2 id="turn-indicator">Đang đợi...</h2>
       </div>
 
       <div class="battle-grid">
-        <div class="player-area opponent-area">
-          <h3 data-en="Opponent" data-vi="Đối thủ">Đối thủ</h3>
-          <div id="opponent-history" class="words-container">
-            <!-- Guesses will be here -->
+        <!-- Khu vực của mình: chứa các lần đoán của mình đối với số của đối thủ -->
+        <div class="player-area my-area">
+          <h3 id="panel-my-guesses">Lịch sử đoán của bạn (Đối thủ)</h3>
+          <div id="my-history" class="grid-history">
+            <!-- Danh sách hàng đoán: mỗi hàng chứa các ô chữ số có màu gợi ý -->
           </div>
         </div>
 
-        <div class="player-area my-area">
-          <h3 data-en="You" data-vi="Bạn">Bạn</h3>
-          <div id="my-secret-display" class="secret-display">
-            Số bí mật: <span id="displayed-my-secret">--</span>
+        <!-- Khu vực của đối thủ: chứa lịch sử đoán của đối thủ đối với số của mình -->
+        <div class="player-area opponent-area">
+          <h3 id="panel-opponent-guesses">Lịch sử đoán của đối thủ (Bạn)</h3>
+          <div id="opponent-history" class="grid-history">
+            <!-- Hiển thị lịch sử đối thủ đoán để mình theo dõi tiến độ của đối thủ -->
           </div>
-          <div id="my-history" class="words-container">
-            <!-- Guesses will be here -->
+          <div id="my-secret-display" class="secret-display">
+            Số bí mật của bạn: <span id="displayed-my-secret">----</span>
           </div>
         </div>
       </div>
 
+      <!-- Form nhập số đoán -->
       <div class="guess-input-container">
-        <div class="word-row">
-          <label for="guess-input" class="sr-only">Đoán một số</label>
-          <input type="number" id="guess-input" placeholder="Đoán một số...">
+        <div id="guess-inputs-row" class="digits-input-row">
+          <!-- Các ô nhập số đoán được sinh động -->
         </div>
-        <button id="guess-btn" class="btn primary">Đoán</button>
+        <button id="guess-btn" class="btn primary">Gửi Dự Đoán</button>
       </div>
     </section>
 

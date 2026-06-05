@@ -144,7 +144,11 @@ const translations = {
         customRoomLabel: "Room ID:",
         customRoomPlaceholder: "eg. 111",
         copyLink: "Copy Link",
-        linkCopied: "Link copied!"
+        linkCopied: "Link copied!",
+        hostBadge: "Host",
+        guestBadge: "Guest",
+        waitingStatus: "Waiting...",
+        readyStatus: "Ready"
     },
     vi: {
         title: "Đoán Từ",
@@ -191,7 +195,11 @@ const translations = {
         customRoomLabel: "Mã phòng:",
         customRoomPlaceholder: "VD: 111",
         copyLink: "Copy Link",
-        linkCopied: "Link copied!"
+        linkCopied: "Link copied!",
+        hostBadge: "Host",
+        guestBadge: "Khách",
+        waitingStatus: "Đang đợi...",
+        readyStatus: "Sẵn sàng"
     }
 };
 
@@ -201,7 +209,6 @@ function updateLanguageUI() {
     document.querySelector('h1').textContent = t.title;
 
     // Home Phase
-    // Check if roomParam exists to show dynamic welcome text, otherwise default
     const urlParams = new URLSearchParams(window.location.search);
     const roomParam = urlParams.get('room');
     if (roomParam) {
@@ -223,14 +230,37 @@ function updateLanguageUI() {
     if (state.isConnected) {
         lobbyStatus.textContent = t.oppConnected;
     } else if (state.phase === 'lobby' && !state.isHost) {
-        // Joining state
         if (lobbyStatus.textContent.includes('...')) {
-            // Keep current establishing text
+            // Keep current text
         } else {
             lobbyStatus.textContent = t.waitingOpponent;
         }
     } else {
         lobbyStatus.textContent = t.waitingOpponent;
+    }
+
+    // Update lobby names & badges
+    const hostName = (state.isHost ? state.myName : state.opponentName) || (state.isHost ? t.defaultHost : t.defaultHost);
+    const guestName = (state.isHost ? state.opponentName : state.myName) || (state.isHost ? t.defaultGuest : t.defaultGuest);
+    document.getElementById('player-host-name').textContent = hostName;
+    document.getElementById('player-guest-name').textContent = guestName;
+    
+    document.querySelector('.host-badge').textContent = t.hostBadge;
+    document.querySelector('.guest-badge').textContent = t.guestBadge;
+
+    const badge = document.getElementById('guest-status-badge');
+    const guestIsReady = state.isHost ? state.opponentReady : state.meReady;
+    if (state.isConnected) {
+        if (guestIsReady) {
+            badge.textContent = t.readyStatus;
+            badge.classList.add('ready');
+        } else {
+            badge.textContent = t.waitingStatus;
+            badge.classList.remove('ready');
+        }
+    } else {
+        badge.textContent = t.waitingStatus;
+        badge.classList.remove('ready');
     }
 
     document.querySelector('#room-info p').firstChild.textContent = t.roomCodeLabel + ' ';
@@ -255,7 +285,7 @@ function updateLanguageUI() {
         winnerText.textContent = t.winner.replace('{name}', winName);
     }
 
-    // Update lang button text (target language)
+    // Update lang button text
     document.getElementById('lang-toggle').textContent = state.language === 'en' ? 'VI' : 'US';
 }
 
@@ -542,6 +572,7 @@ function handleData(data) {
                 full: w.full,
                 revealed: false
             }));
+            updateLanguageUI();
             checkAllReady();
             break;
         case 'START_GAME':
@@ -683,6 +714,7 @@ document.getElementById('submit-words-btn').onclick = () => {
 
     document.getElementById('submit-words-btn').disabled = true;
     document.getElementById('submit-words-btn').textContent = t.waitingForOpp;
+    updateLanguageUI();
     checkAllReady();
 };
 
