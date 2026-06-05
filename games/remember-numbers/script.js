@@ -49,6 +49,8 @@ const createRoomBtn = document.getElementById('create-room-btn');
 const joinRoomBtn = document.getElementById('join-room-btn');
 const copyLinkBtn = document.getElementById('copy-link-btn');
 const shareRoomBtn = document.getElementById('share-room-btn');
+const leaveLobbyBtn = document.getElementById('leave-lobby-btn');
+const leaveGameBtn = document.getElementById('leave-game-btn');
 const submitWordsBtn = document.getElementById('submit-words-btn');
 const playAgainBtn = document.getElementById('play-again-btn');
 const themeToggle = document.getElementById('theme-toggle');
@@ -110,6 +112,8 @@ const translations = {
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
         shareVia: "Send Via",
+        cancelRoom: "Cancel Room",
+        leaveRoom: "Leave Room",
         shareTitle: "Simple Games - Remember Numbers",
         shareText: (code) => `Play Remember Numbers with me! Room ID: ${code}`,
         hostBadge: "Host",
@@ -147,6 +151,8 @@ const translations = {
         copyLink: "Copy Link",
         linkCopied: "Đã copy link!",
         shareVia: "Gửi qua",
+        cancelRoom: "Hủy phòng",
+        leaveRoom: "Rời phòng",
         shareTitle: "Simple Games - Ghi Nhớ Số",
         shareText: (code) => `Chơi Ghi Nhớ Số cùng tôi nhé! Mã phòng: ${code}`,
         enterCode: "Vui lòng nhập mã phòng!",
@@ -229,6 +235,8 @@ function updateLanguageUI() {
     playAgainBtn.textContent = t.playAgain;
     copyLinkBtn.textContent = t.copyLink;
     if (shareRoomBtn) shareRoomBtn.textContent = t.shareVia;
+    if (leaveLobbyBtn) leaveLobbyBtn.textContent = state.isHost ? t.cancelRoom : t.leaveRoom;
+    if (leaveGameBtn) leaveGameBtn.textContent = t.leaveRoom;
     
     document.getElementById('opponent-title').textContent = state.opponentName || t.opponent;
     document.getElementById('my-title').textContent = state.myName || t.you;
@@ -338,8 +346,13 @@ async function initPeer(id = null) {
         console.error(err);
         const t = translations[state.language];
         if (err.type === 'unavailable-id') {
-            alert(t.roomCodeInUse);
-            location.reload();
+            showToast(state.language === 'en' ? "Room code already in use! Please try another one." : "Mã phòng đã được sử dụng! Vui lòng chọn mã khác.", true);
+            if (state.peer) {
+                try { state.peer.destroy(); } catch(e){}
+                state.peer = null;
+            }
+            showPhase('home');
+            updateLanguageUI();
         } else if (err.type === 'peer-unavailable') {
             alert(state.language === 'en' ? "Room not found. Check the code!" : "Không tìm thấy phòng. Vui lòng kiểm tra lại mã!");
             location.reload();
@@ -742,8 +755,43 @@ function resetGame() {
     showPhase('lobby');
 }
 
+function leaveRoom() {
+    if (state.conn) {
+        try { state.conn.close(); } catch(e){}
+        state.conn = null;
+    }
+    if (state.peer) {
+        try { state.peer.destroy(); } catch(e){}
+        state.peer = null;
+    }
+    
+    state.isConnected = false;
+    state.isReconnecting = false;
+    state.myReady = false;
+    state.opponentReady = false;
+    state.sequence = [];
+    state.myGuessed = [];
+    state.opponentGuessed = [];
+    state.gameActive = false;
+    
+    if (state.reconnectTimer) clearInterval(state.reconnectTimer);
+    if (state.reconnectInterval) clearInterval(state.reconnectInterval);
+    if (state.timerInterval) clearInterval(state.timerInterval);
+    
+    roomInfo.style.display = 'none';
+    const badge = document.getElementById('guest-status-badge');
+    if (badge) {
+        badge.textContent = translations[state.language].waitingStatus;
+        badge.classList.remove('ready');
+    }
+    
+    showPhase('home');
+    updateLanguageUI();
+}
+
 // Action Event Handlers
 createRoomBtn.onclick = () => {
+    leaveRoom();
     state.myName = nameInput.value.trim() || "Host";
     
     state.sequenceLength = parseInt(sequenceLengthInput.value, 10) || 4;
@@ -758,6 +806,7 @@ createRoomBtn.onclick = () => {
 };
 
 joinRoomBtn.onclick = () => {
+    leaveRoom();
     state.myName = nameInput.value.trim() || "Guest";
     
     state.isHost = false;
@@ -795,6 +844,15 @@ document.getElementById('web-logo').onclick = () => {
     window.location.href = '../../index.html';
 };
 
+if (leaveLobbyBtn) leaveLobbyBtn.onclick = leaveRoom;
+if (leaveGameBtn) leaveGameBtn.onclick = leaveRoom;
+
+window.addEventListener('beforeunload', () => {
+    if (state.peer) {
+        try { state.peer.destroy(); } catch(e){}
+    }
+});
+
 // Check for room code in URL on page load
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -819,6 +877,22 @@ window.addEventListener('load', () => {
         }
         
         updateWelcomeText(roomParam);
+    }
+    
+    // Username Sync
+    if (nameInput) {
+        const savedName = localStorage.getItem('username');
+        if (savedName) {
+            nameInput.value = savedName;
+        }
+        nameInput.addEventListener('input', () => {
+            const val = nameInput.value.trim();
+            if (val) {
+                localStorage.setItem('username', val);
+            } else {
+                localStorage.removeItem('username');
+            }
+        });
     }
     
     updateThemeUI();

@@ -51,6 +51,23 @@ langToggle.onclick = () => {
     updateLanguageUI();
 };
 
+// Username Logic
+const usernameInput = document.getElementById('username-input');
+if (usernameInput) {
+    const savedName = localStorage.getItem('username');
+    if (savedName) {
+        usernameInput.value = savedName;
+    }
+    usernameInput.addEventListener('input', () => {
+        const val = usernameInput.value.trim();
+        if (val) {
+            localStorage.setItem('username', val);
+        } else {
+            localStorage.removeItem('username');
+        }
+    });
+}
+
 // Initialize
 updateThemeUI();
 updateLanguageUI();
