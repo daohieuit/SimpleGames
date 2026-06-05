@@ -43,12 +43,18 @@
             <input type="text" id="quick-room-code" placeholder="Enter room code..." data-placeholder-en="Enter room code..." data-placeholder-vi="Nhập mã phòng..." required>
           </div>
           <div class="input-group">
-            <label for="quick-game-mode" class="sr-only" data-en="Select Game" data-vi="Chọn Game">Select Game</label>
-            <select id="quick-game-mode" required>
-              <option value="" disabled selected data-en="Select game..." data-vi="Chọn game...">Select game...</option>
-              <option value="guess-number" data-en="Guess Number" data-vi="Đoán Số">Guess Number</option>
-              <option value="guess-word" data-en="Guess Word" data-vi="Đoán Từ">Guess Word</option>
-            </select>
+            <label class="sr-only" data-en="Select Game" data-vi="Chọn Game">Select Game</label>
+            <div class="game-mode-selector">
+              <button type="button" class="mode-btn" data-value="guess-word">
+                <span class="mode-icon">🔤</span>
+                <span class="mode-label" data-en="Guess Word" data-vi="Đoán Từ">Guess Word</span>
+              </button>
+              <button type="button" class="mode-btn" data-value="guess-number">
+                <span class="mode-icon">🔢</span>
+                <span class="mode-label" data-en="Guess Number" data-vi="Đoán Số">Guess Number</span>
+              </button>
+            </div>
+            <input type="hidden" id="quick-game-mode" value="" required>
           </div>
           <button type="submit" class="btn primary" id="quick-join-btn" data-en="Join Room" data-vi="Vào Phòng">Join Room</button>
         </form>

@@ -64,6 +64,18 @@ document.getElementById('web-logo').onclick = () => {
     window.location.href = 'index.html';
 };
 
+// Game Mode Selector Buttons
+const modeButtons = document.querySelectorAll('.game-mode-selector .mode-btn');
+const hiddenGameMode = document.getElementById('quick-game-mode');
+
+modeButtons.forEach(btn => {
+    btn.onclick = () => {
+        modeButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (hiddenGameMode) hiddenGameMode.value = btn.getAttribute('data-value');
+    };
+});
+
 // Quick Join Logic
 const quickJoinForm = document.getElementById('quick-join-form');
 if (quickJoinForm) {
