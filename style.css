@@ -291,113 +291,7 @@ footer h5 {
     border: 0;
 }
 
-/* Quick Join Section */
-.quick-join-card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: var(--rounded-lg);
-    padding: 2.5rem;
-    max-width: 720px;
-    margin: 0 auto 4rem auto;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
 
-.quick-join-card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.quick-join-card h2 {
-    font-family: "Orbitron", sans-serif;
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    color: var(--heading-color);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    text-align: center;
-}
-
-.quick-join-form {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.quick-join-form .input-group {
-    flex: 1;
-    width: 100%;
-}
-
-.quick-join-form input {
-    padding: 0.875rem 1.25rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--rounded-md);
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-size: 0.9375rem;
-    width: 100%;
-    transition: all 0.2s ease;
-}
-
-.quick-join-form input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
-}
-
-.game-mode-selector {
-    display: flex;
-    gap: 1rem;
-    width: 100%;
-}
-
-.mode-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1.25rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--rounded-md);
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: var(--shadow-sm);
-}
-
-.mode-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary);
-}
-
-.mode-btn.active {
-    background-color: var(--primary);
-    color: var(--text-on-dark);
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(17, 17, 17, 0.15);
-}
-
-.dark-mode .mode-btn.active {
-    background-color: var(--text-color);
-    color: var(--bg-color);
-    border-color: var(--text-color);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-}
-
-.mode-icon {
-    font-size: 1.25rem;
-}
-
-.quick-join-form button[type="submit"] {
-    white-space: nowrap;
-    cursor: pointer;
-}
 
 /* Toast Notification */
 .toast {
@@ -426,11 +320,6 @@ footer h5 {
     background-color: var(--error-color);
 }
 
-@media (max-width: 640px) {
-    .quick-join-form {
-        flex-direction: column;
-        align-items: stretch;
-    }
-}
+
 
 /* placeholder label aria-label */

@@ -21,14 +21,10 @@ themeToggle.onclick = () => {
 const langToggle = document.getElementById('lang-toggle');
 const translations = {
     en: {
-        title: "Simple Games",
-        errorRoomCode: "Please enter a room code!",
-        errorGameMode: "Please select a game mode!"
+        title: "Simple Games"
     },
     vi: {
-        title: "Trò Chơi Đơn Giản",
-        errorRoomCode: "Vui lòng nhập mã phòng!",
-        errorGameMode: "Vui lòng chọn chế độ chơi!"
+        title: "Trò Chơi Đơn Giản"
     }
 };
 
@@ -64,39 +60,7 @@ document.getElementById('web-logo').onclick = () => {
     window.location.href = 'index.html';
 };
 
-// Game Mode Selector Buttons
-const modeButtons = document.querySelectorAll('.game-mode-selector .mode-btn');
-const hiddenGameMode = document.getElementById('quick-game-mode');
 
-modeButtons.forEach(btn => {
-    btn.onclick = () => {
-        modeButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (hiddenGameMode) hiddenGameMode.value = btn.getAttribute('data-value');
-    };
-});
-
-// Quick Join Logic
-const quickJoinForm = document.getElementById('quick-join-form');
-if (quickJoinForm) {
-    quickJoinForm.onsubmit = (e) => {
-        e.preventDefault();
-        const roomCode = document.getElementById('quick-room-code').value.trim();
-        const gameMode = document.getElementById('quick-game-mode').value;
-        const t = translations[state.language];
-
-        if (!roomCode) {
-            showToast(t.errorRoomCode, true);
-            return;
-        }
-        if (!gameMode) {
-            showToast(t.errorGameMode, true);
-            return;
-        }
-
-        window.location.href = `games/${gameMode}/index.html?room=${encodeURIComponent(roomCode)}`;
-    };
-}
 
 // Toast Function
 function showToast(message, isError = false) {
