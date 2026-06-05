@@ -59,6 +59,7 @@ const labelName = document.getElementById('label-name');
 const timerDisplay = document.getElementById('timer-display');
 const toast = document.getElementById('toast');
 const copyLinkBtn = document.getElementById('copy-link-btn');
+const shareRoomBtn = document.getElementById('share-room-btn');
 
 function updateWelcomeText(roomCode) {
     const welcomeText = document.getElementById('welcome-text');
@@ -145,6 +146,9 @@ const translations = {
         customRoomPlaceholder: "eg. 111",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
+        shareVia: "Send Via",
+        shareTitle: "Simple Games - Guess Word",
+        shareText: (code) => `Play Guess Word with me! Room ID: ${code}`,
         hostBadge: "Host",
         guestBadge: "Guest",
         waitingStatus: "Waiting...",
@@ -196,6 +200,9 @@ const translations = {
         customRoomPlaceholder: "VD: 111",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
+        shareVia: "Gửi qua",
+        shareTitle: "Simple Games - Đoán Từ",
+        shareText: (code) => `Chơi Đoán Từ cùng tôi nhé! Mã phòng: ${code}`,
         hostBadge: "Host",
         guestBadge: "Khách",
         waitingStatus: "Đang đợi...",
@@ -269,6 +276,7 @@ function updateLanguageUI() {
     addWordBtn.textContent = t.addWord;
     document.getElementById('submit-words-btn').textContent = state.meReady ? t.waitingForOpp : t.ready;
     if (copyLinkBtn) copyLinkBtn.textContent = t.copyLink;
+    if (shareRoomBtn) shareRoomBtn.textContent = t.shareVia;
 
     // Battle Phase
     document.querySelector('.opponent-area h3').textContent = state.opponentName || (state.isHost ? t.defaultGuest : t.defaultHost);
@@ -329,6 +337,33 @@ copyLinkBtn.onclick = async () => {
         showToast(t.linkCopied, true); // Still show feedback even if copy fails
     }
 };
+
+// Share room link
+if (shareRoomBtn) {
+    shareRoomBtn.onclick = () => {
+        const t = translations[state.language];
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = `${baseUrl}?room=${state.roomCode}`;
+        const textMsg = t.shareText(state.roomCode);
+
+        if (navigator.share) {
+            navigator.share({
+                title: t.shareTitle,
+                text: textMsg,
+                url: shareUrl
+            }).catch(err => console.log('Share error:', err));
+        } else {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                const messengerUrl = `fb-messenger://share/?link=${encodeURIComponent(shareUrl)}`;
+                window.open(messengerUrl, '_blank');
+            } else {
+                const messengerUrl = `https://www.facebook.com/dialog/send?app_id=291494419162&link=${encodeURIComponent(shareUrl)}&redirect_uri=${encodeURIComponent(shareUrl)}`;
+                window.open(messengerUrl, '_blank');
+            }
+        }
+    };
+}
 
 
 // Fetch TURN server credentials dynamically

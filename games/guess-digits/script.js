@@ -57,6 +57,7 @@ const playAgainBtn = document.getElementById('play-again-btn');
 const themeToggle = document.getElementById('theme-toggle');
 const langToggle = document.getElementById('lang-toggle');
 const copyLinkBtn = document.getElementById('copy-link-btn');
+const shareRoomBtn = document.getElementById('share-room-btn');
 
 function updateWelcomeText(roomCode) {
     const welcomeText = document.getElementById('welcome-text');
@@ -127,6 +128,9 @@ const translations = {
         secretLabel: "Your Secret:",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
+        shareVia: "Send Via",
+        shareTitle: "Simple Games - Guess Number 2",
+        shareText: (code) => `Play Guess Number 2 with me! Room ID: ${code}`,
         hostBadge: "Host",
         guestBadge: "Guest",
         waitingStatus: "Waiting...",
@@ -166,6 +170,9 @@ const translations = {
         secretLabel: "Số bí mật của bạn:",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
+        shareVia: "Gửi qua",
+        shareTitle: "Simple Games - Đoán Số 2",
+        shareText: (code) => `Chơi Đoán Số 2 cùng tôi nhé! Mã phòng: ${code}`,
         hostBadge: "Host",
         guestBadge: "Khách",
         waitingStatus: "Đang đợi...",
@@ -240,6 +247,7 @@ function updateLanguageUI() {
     // Game Over Phase
     playAgainBtn.textContent = t.playAgain;
     if (copyLinkBtn) copyLinkBtn.textContent = t.copyLink;
+    if (shareRoomBtn) shareRoomBtn.textContent = t.shareVia;
     
     // Badges
     document.querySelector('.host-badge').textContent = t.hostBadge;
@@ -845,6 +853,33 @@ copyLinkBtn.onclick = async () => {
         showToast(t.linkCopied, true);
     }
 };
+
+// Share room link
+if (shareRoomBtn) {
+    shareRoomBtn.onclick = () => {
+        const t = translations[state.language];
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = `${baseUrl}?room=${state.roomId}`;
+        const textMsg = t.shareText(state.roomId);
+
+        if (navigator.share) {
+            navigator.share({
+                title: t.shareTitle,
+                text: textMsg,
+                url: shareUrl
+            }).catch(err => console.log('Share error:', err));
+        } else {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                const messengerUrl = `fb-messenger://share/?link=${encodeURIComponent(shareUrl)}`;
+                window.open(messengerUrl, '_blank');
+            } else {
+                const messengerUrl = `https://www.facebook.com/dialog/send?app_id=291494419162&link=${encodeURIComponent(shareUrl)}&redirect_uri=${encodeURIComponent(shareUrl)}`;
+                window.open(messengerUrl, '_blank');
+            }
+        }
+    };
+}
 
 document.getElementById('web-logo').onclick = () => { 
     if (state.peer) {

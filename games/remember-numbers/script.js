@@ -48,6 +48,7 @@ const roomCodeInput = document.getElementById('room-code-input');
 const createRoomBtn = document.getElementById('create-room-btn');
 const joinRoomBtn = document.getElementById('join-room-btn');
 const copyLinkBtn = document.getElementById('copy-link-btn');
+const shareRoomBtn = document.getElementById('share-room-btn');
 const submitWordsBtn = document.getElementById('submit-words-btn');
 const playAgainBtn = document.getElementById('play-again-btn');
 const themeToggle = document.getElementById('theme-toggle');
@@ -108,6 +109,9 @@ const translations = {
         playAgain: "Play Again",
         copyLink: "Copy Link",
         linkCopied: "Link copied!",
+        shareVia: "Send Via",
+        shareTitle: "Simple Games - Remember Numbers",
+        shareText: (code) => `Play Remember Numbers with me! Room ID: ${code}`,
         hostBadge: "Host",
         guestBadge: "Guest",
         waitingStatus: "Waiting...",
@@ -142,6 +146,9 @@ const translations = {
         playAgain: "Chơi lại",
         copyLink: "Copy Link",
         linkCopied: "Đã copy link!",
+        shareVia: "Gửi qua",
+        shareTitle: "Simple Games - Ghi Nhớ Số",
+        shareText: (code) => `Chơi Ghi Nhớ Số cùng tôi nhé! Mã phòng: ${code}`,
         enterCode: "Vui lòng nhập mã phòng!",
         peerError: "Lỗi kết nối. Đang tải lại trang...",
         roomCodeInUse: "Mã phòng đã được sử dụng hoặc có lỗi. Thử lại.",
@@ -221,6 +228,7 @@ function updateLanguageUI() {
     submitWordsBtn.textContent = state.myReady ? t.waitingOppReady : t.ready;
     playAgainBtn.textContent = t.playAgain;
     copyLinkBtn.textContent = t.copyLink;
+    if (shareRoomBtn) shareRoomBtn.textContent = t.shareVia;
     
     document.getElementById('opponent-title').textContent = state.opponentName || t.opponent;
     document.getElementById('my-title').textContent = state.myName || t.you;
@@ -522,6 +530,33 @@ copyLinkBtn.onclick = () => {
         console.error("Failed to copy url: ", err);
     });
 };
+
+// Share room link
+if (shareRoomBtn) {
+    shareRoomBtn.onclick = () => {
+        const t = translations[state.language];
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = `${baseUrl}?room=${state.roomId}`;
+        const textMsg = t.shareText(state.roomId);
+
+        if (navigator.share) {
+            navigator.share({
+                title: t.shareTitle,
+                text: textMsg,
+                url: shareUrl
+            }).catch(err => console.log('Share error:', err));
+        } else {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                const messengerUrl = `fb-messenger://share/?link=${encodeURIComponent(shareUrl)}`;
+                window.open(messengerUrl, '_blank');
+            } else {
+                const messengerUrl = `https://www.facebook.com/dialog/send?app_id=291494419162&link=${encodeURIComponent(shareUrl)}&redirect_uri=${encodeURIComponent(shareUrl)}`;
+                window.open(messengerUrl, '_blank');
+            }
+        }
+    };
+}
 
 function generateSequence(len, digitsCount) {
     const maxVal = Math.pow(10, digitsCount);
