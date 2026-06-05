@@ -254,7 +254,7 @@ async function initPeer(id = null) {
 
     let heartbeat;
     state.peer.on('open', (peerId) => {
-        const roomCode = state.isHost ? state.roomId : peerId;
+        const roomCode = state.isHost ? state.roomId : roomCodeInput.value.trim();
         state.roomId = roomCode;
         displayRoomCode.textContent = roomCode;
         
