@@ -49,4 +49,4 @@ A high-stakes numerical guessing game.
 - **Responsiveness**: Fully optimized for mobile and desktop play.
 
 ---
-Built with ❤️ by **DaoHieuIT**
+Designed by **DaoHieuIT** (and maybe a little bit of AI) in 2026.
